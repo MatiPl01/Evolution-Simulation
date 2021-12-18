@@ -1,4 +1,4 @@
-package my.project.simulation.datastructures;
+package my.project.simulation.data.structures;
 
 import java.util.*;
 

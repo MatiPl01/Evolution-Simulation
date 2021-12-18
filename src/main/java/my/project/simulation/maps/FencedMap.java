@@ -3,8 +3,9 @@ package my.project.simulation.maps;
 import my.project.simulation.utils.Vector2D;
 
 public class FencedMap extends AbstractMap {
-    FencedMap(int width, int height, double jungleRatio, int bushEnergy, int grassEnergy) {
-        super(width, height, jungleRatio, bushEnergy, grassEnergy);
+    FencedMap(int width, int height, double jungleRatio,
+              int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy) {
+        super(width, height, jungleRatio, startEnergy, moveEnergy, bushEnergy, grassEnergy);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package my.project.simulation;
+package my.project.simulation.utils;
 
 import my.project.simulation.sprites.ISprite;
 

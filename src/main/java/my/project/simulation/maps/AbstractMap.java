@@ -1,6 +1,6 @@
 package my.project.simulation.maps;
 
-import my.project.simulation.IObserver;
+import my.project.simulation.utils.IObserver;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.sprites.*;
 import my.project.simulation.utils.EnergyComparator;
@@ -10,6 +10,10 @@ import my.project.simulation.utils.Vector2D;
 import java.util.*;
 
 public abstract class AbstractMap implements IMap, IObserver {
+    private static final double MIN_BREED_ENERGY_RATIO = .5;
+    private final int moveEnergy;
+    private final int startEnergy;
+
     protected final Vector2D mapLowerLeft = new Vector2D(0, 0);
     protected final Vector2D mapUpperRight;
     protected final Vector2D jungleLowerleft;
@@ -22,7 +26,10 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     protected final List<AbstractPlant> eatenPlants = new ArrayList<>();
 
-    AbstractMap(int width, int height, double jungleRatio, int bushEnergy, int grassEnergy) {
+    AbstractMap(int width, int height, double jungleRatio,
+                int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy) {
+        this.startEnergy = startEnergy;
+        this.moveEnergy = moveEnergy;
         this.bushEnergy = bushEnergy;
         this.grassEnergy = grassEnergy;
         this.mapUpperRight = new Vector2D(width, height);
@@ -76,7 +83,29 @@ public abstract class AbstractMap implements IMap, IObserver {
     @Override
     public void update() {
         feedAnimals();
+        breedAnimals();
         spawnPlants();
+    }
+
+    public int getMoveEnergy() {
+        return moveEnergy;
+    }
+
+    public int getStartEnergy() {
+        return startEnergy;
+    }
+
+    public int getMinBreedEnergy() {
+        return (int)(startEnergy * MIN_BREED_ENERGY_RATIO + .5);
+    }
+
+    public List<Vector2D> getMapBoundingRect() {
+        return new ArrayList<>() {{
+            add(mapLowerLeft);
+            add(mapUpperRight);
+            add(jungleLowerleft);
+            add(jungleUpperRight);
+        }};
     }
 
     private void placeAnimal(Animal animal) {
@@ -118,7 +147,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         for (AbstractPlant plant: eatenPlants) {
             // From the animals on the current field, choose
             // only ones that have the most energy
-            List<Animal> animals = getAnimalsToFeed(plant.getPosition());
+            List<Animal> animals = getAnimalsWithMaxEnergy(plant.getPosition(), 1);
             // Divide the plant's energy into equal parts for
             // each selected animal
             int energyPart = plant.getEnergy() / animals.size();
@@ -129,18 +158,46 @@ public abstract class AbstractMap implements IMap, IObserver {
         eatenPlants.clear();
     }
 
-    private List<Animal> getAnimalsToFeed(Vector2D position) {
-        List<Animal> animals = new ArrayList<>();
+    private void breedAnimals() {
+        for (Vector2D position: mapAnimals.keySet()) {
+            SortedSet<Animal> animals = mapAnimals.get(position);
+            // Continue if there are not enough animals to breed on one field
+            if (animals.size() < 2) continue;
+            // Otherwise, find 2 animals with the greatest energy value
+            List<Animal> animalsToBreed = getAnimalsToBreed(position);
+            // Continue if there are no enough animals on the current field
+            if (animalsToBreed == null) continue;
+            animalsToBreed.get(0).breed(animalsToBreed.get(1));
+        }
+    }
+
+    private List<Animal> getAnimalsWithMaxEnergy(Vector2D position, int firstMaxValuesCount) {
+        List<Animal> result = new ArrayList<>();
+        Set<Animal> animals = mapAnimals.get(position);
         int maxEnergy = 0;
+        int count = 1;
         // Animals are sorted in a non-increasing order, so a loop
         // below will always take the first animal (the one with the
         // greatest energy) and all others having the same energy value
-        for (Animal animal: mapAnimals.get(position)) {
-            if (animal.getEnergy() < maxEnergy) break;
-            maxEnergy = animal.getEnergy();
-            animals.add(animal);
+        if (animals != null) {
+            for (Animal animal: animals) {
+                if (animal.getEnergy() < maxEnergy && ++count > firstMaxValuesCount) break;
+                maxEnergy = animal.getEnergy();
+                result.add(animal);
+            }
         }
-        return animals;
+        return result;
+    }
+
+    private List<Animal> getAnimalsToBreed(Vector2D position) {
+        List<Animal> animals;
+        // Try to get 2 animals with the same energy equal to the maximum energy
+        animals = getAnimalsWithMaxEnergy(position, 1);
+        // If there are not enough animals, take 2 that have different energy
+        // value but greater than all the remaining animals
+        if (animals.size() < 2)  animals = getAnimalsWithMaxEnergy(position, 2);
+        if (animals.size() >= 2) return Random.sample(animals, 2);
+        return null;
     }
 
     public boolean isEmptyField(Vector2D position) {

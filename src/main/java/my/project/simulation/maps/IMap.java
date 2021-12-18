@@ -18,4 +18,10 @@ public interface IMap {
     void spawnPlants();
 
     void update();
+
+    int getMoveEnergy();
+
+    int getStartEnergy();
+
+    int getMinBreedEnergy();
 }

@@ -1,6 +1,6 @@
 package my.project.simulation.sprites;
 
-import my.project.simulation.IObserver;
+import my.project.simulation.utils.IObserver;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.enums.MapDirection;
 import my.project.simulation.utils.Random;
@@ -11,12 +11,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Animal extends AbstractSprite {
-    private static final int moveEnergy = 1;  // TODO - make me available to set in menu
-
     private static final int MIN_GENE_NUM = 0;
     private static final int MAX_GENE_NUM = 7;
     private static final int GENES_COUNT = 32;
-    private static final double BREED_ENERGY_LOSS_PERC = .25;
+    private static final double BREED_ENERGY_LOSS_RATIO = .25;
     private final String IMG_PATH = "/images/animals/leopard.png";
 
     private Vector2D currPosition;
@@ -26,12 +24,12 @@ public class Animal extends AbstractSprite {
     private final int[] genesCounts;
     private int energy;
     private int daysAlive = 0;
-    private List<Animal> children = new ArrayList<>();
+    private final List<Animal> children = new ArrayList<>();
 
-    public Animal(IMap map, Vector2D initialPosition, int energy) {
+    public Animal(IMap map, Vector2D initialPosition) {
         super(map);
         this.genome = generateRandomGenome();
-        this.energy = energy;
+        this.energy = map.getStartEnergy();
         this.currPosition = initialPosition;
         this.direction = generateRandomDirection();
         this.genesCounts = createRotationPreferences(genome);
@@ -94,11 +92,18 @@ public class Animal extends AbstractSprite {
     }
 
     public void update() {
-        int angleNum = chooseRotationAngleNum();
-        rotate(angleNum);
-        if (canMove(angleNum)) move();
-        decreaseEnergy(moveEnergy);
-        daysAlive++;
+        // Update animal's state only if an animal is alive
+        // (only if it has energy greater than 0)
+        if (energy > 0) {
+            int angleNum = chooseRotationAngleNum();
+            rotate(angleNum);
+            if (canMove(angleNum)) move();
+            decreaseEnergy(map.getMoveEnergy());
+            // Delete an animal if its energy dropped below 0
+            if (energy <= 0) remove();
+                // Otherwise, increment days alive counter
+            else daysAlive++;
+        }
     }
 
     public void feed(int deltaEnergy) {
@@ -183,7 +188,7 @@ public class Animal extends AbstractSprite {
             energy2 = temp2;
         }
         // Split parents genomes and merge them into a new genome
-        int splitIdx = energy1 * GENES_COUNT / (energy1 + energy2);
+        int splitIdx = (energy1 * GENES_COUNT) / (energy1 + energy2);
         int[] newGenome = new int[GENES_COUNT];
         for (int i = 0; i < splitIdx; i++)           newGenome[i] = genome1[i];
         for (int i = splitIdx; i < GENES_COUNT; i++) newGenome[i] = genome2[i];
@@ -194,10 +199,16 @@ public class Animal extends AbstractSprite {
         energy -= deltaEnergy;
     }
 
-    private Animal breed(Animal other) {
+    public boolean canBreed() {
+        return energy >= map.getMinBreedEnergy();
+    }
+
+    public Animal breed(Animal other) {
+        // Do not bread if at least one of animals has not enough energy
+        if (!canBreed() || !other.canBreed()) return null;
         // Calculate the energy lost by parents during reproduction
-        int deltaEnergy1 = (int)(energy * BREED_ENERGY_LOSS_PERC);
-        int deltaEnergy2 = (int)(other.energy * BREED_ENERGY_LOSS_PERC);
+        int deltaEnergy1 = (int)(energy * BREED_ENERGY_LOSS_RATIO);
+        int deltaEnergy2 = (int)(other.energy * BREED_ENERGY_LOSS_RATIO);
         // Decrease parents energy
         decreaseEnergy(deltaEnergy1);
         other.decreaseEnergy(deltaEnergy2);

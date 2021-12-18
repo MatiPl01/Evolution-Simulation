@@ -1,6 +1,6 @@
 package my.project.simulation.sprites;
 
-import my.project.simulation.IObserver;
+import my.project.simulation.utils.IObserver;
 
 public interface ISprite {
     /**
