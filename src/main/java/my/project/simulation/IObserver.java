@@ -10,7 +10,7 @@ public interface IObserver {
      * @return
      *      A map element which position was changed
      */
-    ISprite changedSpritePosition();
+    void changeSpritePosition(ISprite sprite);
 
     /**
      * A method which allows an observed element to send notification
@@ -18,7 +18,7 @@ public interface IObserver {
      *
      * @return
      */
-    ISprite spawnedSprite();
+    void addSprite(ISprite sprite);
 
     /**
      * A method which allows an observed element to send notification
@@ -26,5 +26,5 @@ public interface IObserver {
      *
      * @return
      */
-    ISprite removedSprite();
+    void removeSprite(ISprite sprite);
 }

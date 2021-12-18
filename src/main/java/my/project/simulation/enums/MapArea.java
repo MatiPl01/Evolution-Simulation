@@ -1,4 +1,4 @@
-package my.project.simulation.utils;
+package my.project.simulation.enums;
 
 public enum MapArea {
     JUNGLE,

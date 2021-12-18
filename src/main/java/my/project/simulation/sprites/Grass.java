@@ -1,6 +1,7 @@
 package my.project.simulation.sprites;
 
-import my.project.simulation.utils.MapArea;
+import my.project.simulation.enums.MapArea;
+import my.project.simulation.maps.IMap;
 import my.project.simulation.utils.Random;
 import my.project.simulation.utils.Vector2D;
 
@@ -11,6 +12,7 @@ import java.util.Map;
 
 public class Grass extends AbstractSprite {
     private final String IMG_PATH;
+    private final Vector2D position;
     private static final Map<MapArea, List<String>> images = new HashMap<>(){{
         put(MapArea.STEPPE, new ArrayList<>() {{
             add("/images/steppe/grass-1.png");
@@ -24,9 +26,10 @@ public class Grass extends AbstractSprite {
     }};
     private static final String sign = "*";
 
-    public Grass(MapArea areaType, Vector2D position) {
-        super(position);
-        this.IMG_PATH = getRandomImagePath(areaType);
+    public Grass(IMap map, Vector2D position) {
+        super(map);
+        this.position = position;
+        this.IMG_PATH = getRandomImagePath(map.getAreaType(position));
     }
 
     @Override
@@ -37,6 +40,10 @@ public class Grass extends AbstractSprite {
     @Override
     public String getImagePath() {
         return IMG_PATH;
+    }
+
+    public Vector2D getPosition() {
+        return position;
     }
 
     private String getRandomImagePath(MapArea areaType) {

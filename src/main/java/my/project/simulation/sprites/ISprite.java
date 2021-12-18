@@ -1,16 +1,8 @@
 package my.project.simulation.sprites;
 
 import my.project.simulation.IObserver;
-import my.project.simulation.utils.Vector2D;
 
 public interface ISprite {
-    /**
-     * Get the position of the map element.
-     *
-     * @return The position vector of the map element.
-     */
-    Vector2D getPosition();
-
     /**
      * Get String representation of an element,
      *

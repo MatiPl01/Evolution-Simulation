@@ -44,7 +44,7 @@ class Node<T> {
     }
 }
 
-public class PrefixTree<T> { // inserted data must be an iterable
+public class PrefixTree<T> { // inserted data must be a list
     private final Node<T> root;
     private final Map<T, Integer> mappedValues;
     private final Set<Node<T>> maxCountLeaves = new HashSet<>();

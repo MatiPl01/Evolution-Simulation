@@ -1,4 +1,6 @@
-package my.project.simulation.utils;
+package my.project.simulation.enums;
+
+import my.project.simulation.utils.Vector2D;
 
 public enum MapDirection {
     NORTH,

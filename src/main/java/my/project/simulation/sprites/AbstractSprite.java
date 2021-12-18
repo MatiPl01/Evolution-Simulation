@@ -1,27 +1,23 @@
 package my.project.simulation.sprites;
 
 import my.project.simulation.IObserver;
-import my.project.simulation.utils.Vector2D;
+import my.project.simulation.maps.IMap;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public abstract class AbstractSprite implements ISprite {
-    protected Vector2D currPosition;
+    protected final IMap map;
     protected final Set<IObserver> observers = new HashSet<>();
 
-    public AbstractSprite(Vector2D position) {
-        this.currPosition = position;
-    }
-
-    @Override
-    public Vector2D getPosition() {
-        return currPosition;
+    protected AbstractSprite(IMap map) {
+        this.map = map;
+        addObserver((IObserver) map);
     }
 
     @Override
     public void remove() {
-        observers.forEach(IObserver::removedSprite);
+        for (IObserver observer: observers) observer.removeSprite(this);
     }
 
     @Override

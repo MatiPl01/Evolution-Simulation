@@ -2,7 +2,7 @@ package my.project.simulation.sprites;
 
 import my.project.simulation.IObserver;
 import my.project.simulation.maps.IMap;
-import my.project.simulation.utils.MapDirection;
+import my.project.simulation.enums.MapDirection;
 import my.project.simulation.utils.Random;
 import my.project.simulation.utils.Vector2D;
 
@@ -20,9 +20,9 @@ public class Animal extends AbstractSprite {
     private static final double BREED_ENERGY_LOSS_PERC = .25;
     private final String IMG_PATH = "/images/animals/leopard.png";
 
+    private Vector2D currPosition;
+    private Vector2D prevPosition = null;
     private MapDirection direction;
-    private final IMap map;
-
     private final int[] genome;
     private final int[] genesCounts;
     private int energy;
@@ -30,19 +30,19 @@ public class Animal extends AbstractSprite {
     private List<Animal> children = new ArrayList<>();
 
     public Animal(IMap map, Vector2D initialPosition, int energy) {
-        super(initialPosition);
-        this.map = map;
+        super(map);
         this.genome = generateRandomGenome();
         this.energy = energy;
+        this.currPosition = initialPosition;
         this.direction = generateRandomDirection();
         this.genesCounts = createRotationPreferences(genome);
     }
 
     public Animal(IMap map, Vector2D initialPosition, int energy, int[] genome) {
-        super(initialPosition);
-        this.map = map;
+        super(map);
         this.genome = genome;
         this.energy = energy;
+        this.currPosition = initialPosition;
         this.direction = generateRandomDirection();
         this.genesCounts = createRotationPreferences(genome);
     }
@@ -64,6 +64,14 @@ public class Animal extends AbstractSprite {
     @Override
     public String getImagePath() {
         return IMG_PATH;
+    }
+
+    public Vector2D getCurrPosition() {
+        return currPosition;
+    }
+
+    public Vector2D getPrevPosition() {
+        return prevPosition;
     }
 
     public int getEnergy() {
@@ -108,14 +116,18 @@ public class Animal extends AbstractSprite {
     }
 
     public void move() {
-        Vector2D newPosition = direction.toUnitVector();
-        if (map.canMoveTo(newPosition)) {
+        Vector2D moveVector = direction.toUnitVector();
+        Vector2D nextPosition = map.getNextPosition(currPosition, moveVector);
+        // Move an animal only if a new position will be different to the current one
+        if (nextPosition != currPosition) {
+            prevPosition = currPosition;
+            currPosition = nextPosition;
             notifyPositionChanged();
         }
     }
 
     private void notifyPositionChanged() {
-        observers.forEach(IObserver::changedSpritePosition);
+        for (IObserver observer: observers) observer.changeSpritePosition(this);
     }
 
     private int[] createRotationPreferences(int[] currGenome) {
