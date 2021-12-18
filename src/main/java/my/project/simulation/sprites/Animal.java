@@ -119,11 +119,9 @@ public class Animal extends AbstractSprite {
         Vector2D moveVector = direction.toUnitVector();
         Vector2D nextPosition = map.getNextPosition(currPosition, moveVector);
         // Move an animal only if a new position will be different to the current one
-        if (nextPosition != currPosition) {
-            prevPosition = currPosition;
-            currPosition = nextPosition;
-            notifyPositionChanged();
-        }
+        prevPosition = currPosition;
+        currPosition = nextPosition;
+        notifyPositionChanged();
     }
 
     private void notifyPositionChanged() {

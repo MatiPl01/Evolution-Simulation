@@ -6,24 +6,26 @@ import my.project.simulation.sprites.Animal;
 import my.project.simulation.sprites.Grass;
 import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.EnergyComparator;
+import my.project.simulation.utils.Random;
 import my.project.simulation.utils.Vector2D;
 
 import java.util.*;
 
 public abstract class AbstractMap implements IMap, IObserver {
-    private final int totalWidth;
-    private final int totalHeight;
-    private final int jungleWidth;
-    private final int jungleHeight;
+    protected final Vector2D mapLowerLeft = new Vector2D(0, 0);
+    protected final Vector2D mapUpperRight;
+    protected final Vector2D jungleLowerleft;
+    protected final Vector2D jungleUpperRight;
 
     protected final Map<Vector2D, SortedSet<Animal>> mapAnimals = new HashMap<>();
     protected final Map<Vector2D, Grass> mapGrass = new HashMap<>();
 
-    AbstractMap(int totalWidth, int totalHeight, int jungleWidth, int jungleHeight) {
-        this.totalWidth = totalWidth;
-        this.totalHeight = totalHeight;
-        this.jungleWidth = jungleWidth;
-        this.jungleHeight = jungleHeight;
+    AbstractMap(int width, int height, double jungleRatio) {
+        this.mapUpperRight = new Vector2D(width, height);
+        int jungleWidth  = (int) (2 * Math.round((width / 2) * jungleRatio) + (width % 2 == 1 ? 1 : 0));
+        int jungleHeight = (int) (2 * Math.round((height / 2) * jungleRatio) + (height % 2 == 1 ? 1 : 0));
+        this.jungleLowerleft = new Vector2D((width - jungleWidth) / 2, (height - jungleHeight) / 2);
+        this.jungleUpperRight = this.jungleLowerleft.add(new Vector2D(jungleWidth, jungleHeight));
     }
 
     @Override
@@ -85,11 +87,115 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     @Override
     public MapArea getAreaType(Vector2D position) {
-        int x = position.getX();
-        int y = position.getY();
-        if (Math.abs(x) < (jungleWidth + 1) / 2 && Math.abs(y) < (jungleHeight + 1) / 2) {
+        if (position.precedes(jungleUpperRight) && position.follows(jungleLowerleft)) {
             return MapArea.JUNGLE;
+        } else if (position.precedes(mapUpperRight) && position.follows(mapLowerLeft)) {
+            return MapArea.STEPPE;
         }
-        return MapArea.STEPPE;
+        return null;
+    }
+
+    @Override
+    public void spawnGrass() {
+        spawnSingleGrass(MapArea.JUNGLE);
+        spawnSingleGrass(MapArea.STEPPE);
+    }
+
+    public void update() {
+        spawnGrass();
+    }
+
+    public boolean isEmptyField(Vector2D position) {
+        return mapAnimals.get(position) == null
+                || mapAnimals.get(position).size() == 0
+                || mapGrass.get(position) == null;
+    }
+
+    private void spawnSingleGrass(MapArea area) {
+        Vector2D position = switch (area) {
+            case JUNGLE -> getJungleEmptyFieldVector();
+            case STEPPE -> getSteppeEmptyFieldVector();
+        };
+        // Do not spawn a grass object if there is no space available
+        if (position == null) return;
+        ISprite grass = new Grass(this, position);
+        grass.add();
+    }
+
+    private Vector2D getJungleEmptyFieldVector() {
+        return getSegmentEmptyFieldVector(null, jungleLowerleft, jungleUpperRight);
+    }
+
+    private Vector2D getSteppeEmptyFieldVector() {
+        /*
+        *  +---+---+---+
+        *  | 0 | 1 | 2 |
+        *  +---+---+---+
+        *  | 3 |   | 4 |
+        *  +---+---+---+
+        *  | 5 | 6 | 7 |
+        *  +---+---+---+
+        */
+        int segmentsCount = 8;
+        int segmentIdx = Random.randInt(segmentsCount - 1);
+
+        Vector2D position = null;
+        int count = 0;
+        while (count++ < segmentsCount && position == null) {
+            Vector2D segmentLowerLeft  = getSegmentLowerLeft(segmentIdx);
+            Vector2D segmentUpperRight = getSegmentUpperRight(segmentIdx);
+            Vector2D initialPosition   = count > 0 ? segmentLowerLeft : null;
+            position = getSegmentEmptyFieldVector(initialPosition, segmentLowerLeft, segmentUpperRight);
+            segmentIdx = (segmentIdx + 1) % segmentsCount;
+        }
+        return position;
+    }
+
+    private Vector2D getSegmentLowerLeft(int segmentIdx) throws IllegalArgumentException {
+        return switch (segmentIdx) {
+            case 0 -> new Vector2D(mapLowerLeft.getX(), jungleUpperRight.getY());
+            case 1 -> jungleLowerleft.upperLeft(jungleUpperRight);
+            case 2 -> jungleUpperRight;
+            case 3 -> new Vector2D(mapLowerLeft.getX(), jungleLowerleft.getY());
+            case 4 -> jungleLowerleft.lowerRight(jungleUpperRight);
+            case 5 -> mapLowerLeft;
+            case 6 -> new Vector2D(jungleLowerleft.getX(), mapLowerLeft.getY());
+            case 7 -> mapLowerLeft.lowerRight(mapUpperRight);
+            default -> throw new IllegalArgumentException(segmentIdx + " is not valid segment index");
+        };
+    }
+
+    private Vector2D getSegmentUpperRight(int segmentIdx) throws IllegalArgumentException {
+        return switch (segmentIdx) {
+            case 0 -> new Vector2D(jungleLowerleft.getX(), mapUpperRight.getY());
+            case 1 -> new Vector2D(jungleUpperRight.getX(), mapUpperRight.getY());
+            case 2 -> mapUpperRight;
+            case 3 -> jungleLowerleft.upperLeft(jungleUpperRight);
+            case 4 -> new Vector2D(mapUpperRight.getX(), jungleUpperRight.getY());
+            case 5 -> jungleLowerleft;
+            case 6 -> new Vector2D(jungleLowerleft.getX(), mapLowerLeft.getY());
+            case 7 -> new Vector2D(mapUpperRight.getX(), jungleLowerleft.getY());
+            default -> throw new IllegalArgumentException(segmentIdx + " is not valid segment index");
+        };
+    }
+
+    private Vector2D getSegmentEmptyFieldVector(Vector2D initialPosition, Vector2D lowerLeft, Vector2D upperRight) {
+        int minX = lowerLeft.getX();
+        int maxX = upperRight.getX();
+        int minY = lowerLeft.getY();
+        int maxY = upperRight.getY();
+        // Choose the first vector randomly if is not specified
+        Vector2D position = initialPosition == null ? Vector2D.randomVector(minX, maxX, minY, maxY) : initialPosition;
+        // Calculate segment dimensions
+        int segmentWidth = maxX - minX + 1;
+        int segmentHeight = maxY - minY + 1;
+        int i = initialPosition.getX() * segmentHeight + initialPosition.getY();
+        int segmentFieldsCount = segmentWidth * segmentHeight;
+        // Loop over subsequent fields till a field is not empty
+        while (!isEmptyField(position)) {
+            i = (i + 1) % segmentFieldsCount;
+            position = lowerLeft.add(new Vector2D(i / segmentHeight, i % segmentWidth));
+        }
+        return position;
     }
 }

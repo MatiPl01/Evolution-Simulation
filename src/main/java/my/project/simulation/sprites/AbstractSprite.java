@@ -21,6 +21,11 @@ public abstract class AbstractSprite implements ISprite {
     }
 
     @Override
+    public void add() {
+        for (IObserver observer: observers) observer.addSprite(this);
+    }
+
+    @Override
     public void addObserver(IObserver observer) {
         observers.add(observer);
     }

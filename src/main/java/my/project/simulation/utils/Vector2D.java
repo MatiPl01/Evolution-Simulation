@@ -16,19 +16,19 @@ public class Vector2D {
         if (this == other) {
             return true;
         } else if (other instanceof Vector2D otherCasted) {
-            return this.x == otherCasted.x && this.y == otherCasted.y;
+            return x == otherCasted.x && y == otherCasted.y;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.x, this.y);
+        return Objects.hash(x, y);
     }
 
     @Override
     public String toString() {
-        return "(" + this.x + ", " + this.y + ")";
+        return "(" + x + ", " + y + ")";
     }
 
     public int getX() { return x; }
@@ -36,32 +36,38 @@ public class Vector2D {
     public int getY() { return y; }
 
     public boolean precedes(Vector2D other) {
-        return this.x <= other.x && this.y <= other.y;
+        return x <= other.x && y <= other.y;
     }
 
     public boolean follows(Vector2D other) {
-        return this.x >= other.x && this.y >= other.y;
+        return x >= other.x && y >= other.y;
     }
 
     public Vector2D upperRight(Vector2D other) {
-        return new Vector2D(Math.max(this.x, other.x), Math.max(this.y, other.y));
+        return new Vector2D(Math.max(x, other.x), Math.max(y, other.y));
+    }
+
+    public Vector2D upperLeft(Vector2D other) {
+        return new Vector2D(Math.min(x, other.x), Math.max(y, other.y));
     }
 
     public Vector2D lowerLeft(Vector2D other) {
-        return new Vector2D(Math.min(this.x, other.x), Math.min(this.y, other.y));
+        return new Vector2D(Math.min(x, other.x), Math.min(y, other.y));
+    }
+
+    public Vector2D lowerRight(Vector2D other) {
+        return new Vector2D(Math.max(x, other.x), Math.min(y, other.y));
     }
 
     public Vector2D add(Vector2D other) {
-        return new Vector2D(this.x + other.x, this.y + other.y);
+        return new Vector2D(x + other.x, y + other.y);
     }
 
     public Vector2D subtract(Vector2D other) {
-        return new Vector2D(this.x - other.x, this.y - other.y);
+        return new Vector2D(x - other.x, y - other.y);
     }
 
-    public Vector2D opposite() {
-        return new Vector2D(-this.x, -this.y);
-    }
+    public Vector2D opposite() {return new Vector2D(-x, -y); }
 
     public static Vector2D randomVector(int minX, int maxX, int minY, int maxY) {
         return new Vector2D(Random.randInt(minX, maxX), Random.randInt(minY, maxY));

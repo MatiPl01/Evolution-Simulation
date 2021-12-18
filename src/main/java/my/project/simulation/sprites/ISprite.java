@@ -17,9 +17,9 @@ public interface ISprite {
      */
     String getImagePath();
 
-    /**
-     * Remove an element from a GUI
-     */
+
+    void add();
+
     void remove();
 
     /**

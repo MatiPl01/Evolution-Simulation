@@ -14,4 +14,6 @@ public interface IMap {
     MapArea getAreaType(Vector2D position);
 
     Vector2D getNextPosition(Vector2D currPosition, Vector2D moveVector);
+
+    void spawnGrass();
 }
