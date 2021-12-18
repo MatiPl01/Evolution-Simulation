@@ -15,5 +15,7 @@ public interface IMap {
 
     Vector2D getNextPosition(Vector2D currPosition, Vector2D moveVector);
 
-    void spawnGrass();
+    void spawnPlants();
+
+    void update();
 }

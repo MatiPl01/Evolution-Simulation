@@ -11,8 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Animal extends AbstractSprite {
-    private static final int feedEnergy = 1; // TODO - make me available to set in menu
-    private static final int energyLoss = 1; // TODO - make me available to set in menu
+    private static final int moveEnergy = 1;  // TODO - make me available to set in menu
 
     private static final int MIN_GENE_NUM = 0;
     private static final int MAX_GENE_NUM = 7;
@@ -98,12 +97,12 @@ public class Animal extends AbstractSprite {
         int angleNum = chooseRotationAngleNum();
         rotate(angleNum);
         if (canMove(angleNum)) move();
-        decreaseEnergy(energyLoss);
+        decreaseEnergy(moveEnergy);
         daysAlive++;
     }
 
-    public void feed() {
-        energy += feedEnergy;
+    public void feed(int deltaEnergy) {
+        energy += deltaEnergy;
     }
 
     public void rotate(int angleNum) {

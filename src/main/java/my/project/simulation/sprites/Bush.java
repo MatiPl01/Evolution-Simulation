@@ -7,15 +7,14 @@ import my.project.simulation.utils.Vector2D;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Grass extends AbstractPlant {
+public class Bush extends AbstractPlant {
     protected static final List<String> IMG_PATHS = new ArrayList<>() {{
-        add("/images/steppe/grass-1.png");
-        add("/images/steppe/grass-2.png");
-        add("/images/steppe/grass-3.png");
+        add("/images/jungle/bush-1.png");
+        add("/images/jungle/bush-2.png");
     }};
-    private static final String sign = "*";
+    private static final String sign = "#";
 
-    public Grass(IMap map, Vector2D position, int plantEnergy) {
+    public Bush(IMap map, Vector2D position, int plantEnergy) {
         super(map, position, plantEnergy);
     }
 
