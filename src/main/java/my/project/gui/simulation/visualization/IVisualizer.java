@@ -1,4 +1,4 @@
-package my.project.gui.simulation;
+package my.project.gui.simulation.visualization;
 
 public interface IVisualizer {
 

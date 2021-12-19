@@ -1,14 +1,14 @@
-package my.project.gui.simulation;
+package my.project.gui.simulation.visualization;
 
-import javafx.scene.layout.Pane;
+import javafx.scene.control.ScrollPane;
 import my.project.simulation.maps.IMap;
 
 public class SimulationVisualizer implements IVisualizer {
     private final GridBuilder builder;
     private boolean isPaused = true;
 
-    public SimulationVisualizer(IMap map, Pane parentPane) {
-        this.builder = new GridBuilder(map, parentPane);
+    public SimulationVisualizer(IMap map, ScrollPane parentContainer) {
+        this.builder = new GridBuilder(map, parentContainer);
     }
 
     @Override
@@ -31,7 +31,7 @@ public class SimulationVisualizer implements IVisualizer {
     @Override
     public void drawGrid() {
         builder.buildGrid();
-        builder.spawnSprites();
+        builder.loadGridTextures();
         builder.renderGrid();
     }
 

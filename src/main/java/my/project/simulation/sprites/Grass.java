@@ -9,9 +9,9 @@ import java.util.List;
 
 public class Grass extends AbstractPlant {
     protected static final List<String> IMG_PATHS = new ArrayList<>() {{
-        add("/images/steppe/grass-1.png");
-        add("/images/steppe/grass-2.png");
-        add("/images/steppe/grass-3.png");
+        add("src/main/resources/images/steppe/grass-1.png");
+        add("src/main/resources/images/steppe/grass-2.png");
+        add("src/main/resources/images/steppe/grass-3.png");
     }};
     private static final String sign = "*";
 

@@ -1,12 +1,12 @@
 package my.project.simulation.engine;
 
-import javafx.scene.layout.Pane;
+import javafx.scene.control.ScrollPane;
 import my.project.simulation.maps.IMap;
 
 public interface IEngine {
     void run();
 
-    void addData(IMap map, Pane parentPane);
+    void addData(IMap map, ScrollPane parentContainer);
 
     void removeData(IMap map);
 }

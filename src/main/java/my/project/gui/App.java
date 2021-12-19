@@ -18,8 +18,8 @@ public class App extends Application {
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/fxml/SimulationsContainer.fxml"));
+        System.out.println(loader);
         HBox HBox = loader.load();
-
         Scene scene = new Scene(HBox);
 //        Application.setUserAgentStylesheet(Application.STYLESHEET_CASPIAN);
         String css = Objects.requireNonNull(getClass().getResource("/css/style.css")).toExternalForm();

@@ -1,5 +1,6 @@
 package my.project.simulation.maps;
 
+import my.project.gui.simulation.visualization.GridBuilder;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.Vector2D;
@@ -28,4 +29,10 @@ public interface IMap {
     int getMinBreedEnergy();
 
     List<Vector2D> getMapBoundingRect();
+
+    void initialize();
+
+    void setGridBuilder(GridBuilder gridBuilder);
+
+    GridBuilder getGridBuilder();
 }

@@ -1,6 +1,8 @@
 package my.project.simulation.sprites;
 
+import my.project.simulation.maps.IMap;
 import my.project.simulation.utils.IObserver;
+import my.project.simulation.utils.Vector2D;
 
 public interface ISprite {
     /**
@@ -17,6 +19,9 @@ public interface ISprite {
      */
     String getImagePath();
 
+    Vector2D getPosition();
+
+    IMap getMap();
 
     void add();
 

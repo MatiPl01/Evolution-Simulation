@@ -1,5 +1,6 @@
 package my.project.simulation.sprites;
 
+import my.project.gui.simulation.sprites.GuiAnimalSprite;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.enums.MapDirection;
@@ -15,9 +16,8 @@ public class Animal extends AbstractSprite {
     private static final int MAX_GENE_NUM = 7;
     private static final int GENES_COUNT = 32;
     private static final double BREED_ENERGY_LOSS_RATIO = .25;
-    private final String IMG_PATH = "/images/animals/leopard.png";
+    private final String IMG_PATH = "src/main/resources/images/animals/leopard.png";
 
-    private Vector2D currPosition;
     private Vector2D prevPosition = null;
     private MapDirection direction;
     private final int[] genome;
@@ -27,25 +27,32 @@ public class Animal extends AbstractSprite {
     private final List<Animal> children = new ArrayList<>();
 
     public Animal(IMap map, Vector2D initialPosition) {
-        super(map);
+        super(map, initialPosition);
         this.genome = generateRandomGenome();
+        System.out.println("Animal genome: " + Arrays.toString(genome));
         this.energy = map.getStartEnergy();
-        this.currPosition = initialPosition;
+        System.out.println("Animal energy: " + energy);
         this.direction = generateRandomDirection();
+        System.out.println("Animal direction: " + direction);
         this.genesCounts = calculateGenesCounts(genome);
+        System.out.println("Animal genes counts: " + Arrays.toString(genesCounts));
+        addObserver(new GuiAnimalSprite(this));
+        System.out.println("Added animal Gui observer");
     }
 
     public Animal(IMap map, Vector2D initialPosition, int energy, int[] genome) {
-        super(map);
+        super(map, initialPosition);
         this.genome = genome;
         this.energy = energy;
-        this.currPosition = initialPosition;
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
+        addObserver(new GuiAnimalSprite(this));
+        System.out.println("Added animal Gui observer");
     }
 
     @Override
     public String toString() {
+        System.out.println("Animal direction? " + direction);
         return switch(direction) {
             case NORTH     -> "N";
             case NORTHEAST -> "NE";
@@ -61,10 +68,6 @@ public class Animal extends AbstractSprite {
     @Override
     public String getImagePath() {
         return IMG_PATH;
-    }
-
-    public Vector2D getCurrPosition() {
-        return currPosition;
     }
 
     public Vector2D getPrevPosition() {
@@ -125,10 +128,10 @@ public class Animal extends AbstractSprite {
 
     public void move() {
         Vector2D moveVector = direction.toUnitVector();
-        Vector2D nextPosition = map.getNextPosition(currPosition, moveVector);
+        Vector2D nextPosition = map.getNextPosition(position, moveVector);
         // Move an animal only if a new position will be different to the current one
-        prevPosition = currPosition;
-        currPosition = nextPosition;
+        prevPosition = position;
+        position = nextPosition;
         notifyPositionChanged();
     }
 
@@ -166,7 +169,10 @@ public class Animal extends AbstractSprite {
 
     private MapDirection generateRandomDirection() {
         MapDirection[] values = MapDirection.values();
-        return values[Random.randInt(values.length - 1)];
+        System.out.println("Possible directions: " + values);
+        MapDirection v = values[Random.randInt(values.length - 1)];
+        System.out.println("Result: " + v);
+        return v;
     }
 
     private int[] generateRandomGenome() {
@@ -219,7 +225,7 @@ public class Animal extends AbstractSprite {
         // Create the genome of the child
         int[] childGenome = mergeGenomes(genome, energy, other.genome, other.energy);
         // Create a new animal with the energy inherited from its parents
-        Animal child = new Animal(map, currPosition, deltaEnergy1 + deltaEnergy2, childGenome);
+        Animal child = new Animal(map, position, deltaEnergy1 + deltaEnergy2, childGenome);
         // Add a child to children lists of parents
         children.add(child);
         other.children.add(child);

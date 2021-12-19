@@ -9,8 +9,8 @@ import java.util.List;
 
 public class Bush extends AbstractPlant {
     protected static final List<String> IMG_PATHS = new ArrayList<>() {{
-        add("/images/jungle/bush-1.png");
-        add("/images/jungle/bush-2.png");
+        add("src/main/resources/images/jungle/bush-1.png");
+        add("src/main/resources/images/jungle/bush-2.png");
     }};
     private static final String sign = "#";
 

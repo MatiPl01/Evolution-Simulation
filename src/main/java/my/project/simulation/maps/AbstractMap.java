@@ -1,5 +1,6 @@
 package my.project.simulation.maps;
 
+import my.project.gui.simulation.visualization.GridBuilder;
 import my.project.simulation.data.structures.PrefixTree;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.enums.MapArea;
@@ -30,21 +31,29 @@ public abstract class AbstractMap implements IMap, IObserver {
     private int animalsAliveCount;
     private int animalsDiedCount = 0;
     private int plantsCount = 0;
+    private GridBuilder gridBuilder;
 
+    // TODO - add input type checking (on a frontEnd side)
     AbstractMap(int width, int height, double jungleRatio,
                 int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
                 int animalsCount) {
+        // Store initial values
         this.startEnergy = startEnergy;
         this.moveEnergy = moveEnergy;
         this.bushEnergy = bushEnergy;
         this.grassEnergy = grassEnergy;
         this.animalsAliveCount = animalsCount;
-        this.mapUpperRight = new Vector2D(width, height);
-        int jungleWidth  = (int) (2 * Math.round((width / 2) * jungleRatio) + (width % 2 == 1 ? 1 : 0));
-        int jungleHeight = (int) (2 * Math.round((height / 2) * jungleRatio) + (height % 2 == 1 ? 1 : 0));
+
+        // Calculate map upper-right bound vector
+        this.mapUpperRight = new Vector2D(width - 1, height - 1);
+
+        // Calculate jungle bounding vectors
+        int jungleWidth = (int)Math.round(width * jungleRatio);
+        if (jungleWidth % 2 != width % 2) jungleWidth += 1;
+        int jungleHeight = (int)Math.round(height * jungleRatio);
+        if (jungleHeight % 2 != height % 2) jungleHeight += 1;
         this.jungleLowerleft = new Vector2D((width - jungleWidth) / 2, (height - jungleHeight) / 2);
-        this.jungleUpperRight = this.jungleLowerleft.add(new Vector2D(jungleWidth, jungleHeight));
-        randomlyPalceAnimals(animalsCount);
+        this.jungleUpperRight = this.jungleLowerleft.add(new Vector2D(jungleWidth - 1, jungleHeight - 1));
     }
 
     @Override
@@ -63,7 +72,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void removeSprite(ISprite sprite) throws NoSuchElementException {
         // If a sprite is an animal object
         if (sprite instanceof Animal animal) {
-            removeAnimal(animal, animal.getCurrPosition());
+            removeAnimal(animal, animal.getPosition());
             animalsDiedCount++;
             animalsAliveCount--;
             genotypesTree.remove(animal.getGenome());
@@ -98,6 +107,16 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
+    public void setGridBuilder(GridBuilder gridBuilder) {
+        this.gridBuilder = gridBuilder;
+    }
+
+    @Override
+    public GridBuilder getGridBuilder() {
+        return gridBuilder;
+    }
+
+    @Override
     public void spawnPlants() {
         spawnSinglePlant(MapArea.JUNGLE);
         spawnSinglePlant(MapArea.STEPPE);
@@ -115,8 +134,6 @@ public abstract class AbstractMap implements IMap, IObserver {
         return new ArrayList<>() {{
             add(mapLowerLeft);
             add(mapUpperRight);
-            add(jungleLowerleft);
-            add(jungleUpperRight);
         }};
     }
 
@@ -140,22 +157,33 @@ public abstract class AbstractMap implements IMap, IObserver {
         return (int)(startEnergy * MIN_BREED_ENERGY_RATIO + .5);
     }
 
+    public void initialize() {
+        randomlyPalceAnimals(animalsAliveCount);
+        System.out.println("=== ANIMALS SPAWNED ===\n");
+        spawnSinglePlant(MapArea.JUNGLE);
+        spawnSinglePlant(MapArea.STEPPE);
+        System.out.println("=== PLANTS SPAWNED ===\n");
+    }
+
     private void randomlyPalceAnimals(int animalsCount) {
         int minX = mapLowerLeft.getX();
         int maxX = mapUpperRight.getX();
         int minY = mapLowerLeft.getY();
-        int maxY = mapLowerLeft.getY();
+        int maxY = mapUpperRight.getY();
 
         for (int i = 0; i < animalsCount; i++) {
             Vector2D randomPosition = Vector2D.randomVector(minX, maxX, minY, maxY);
             Vector2D position = getSegmentEmptyFieldVector(randomPosition, mapLowerLeft, mapUpperRight);
+            System.out.println("Creating " + i + " animal: " + position + " " + randomPosition);
             Animal animal = new Animal(this, position);
+            System.out.println("Animal created");
             animal.add();
+            System.out.println("Observers notified");
         }
     }
 
     private void placeAnimal(Animal animal) {
-        Vector2D position = animal.getCurrPosition();
+        Vector2D position = animal.getPosition();
         // Create the new animals list if there is no animals list on the specified position
         if (mapAnimals.get(position) == null) mapAnimals.put(position, new TreeSet<>(new EnergyComparator()));
         // Add an animal to the list
@@ -266,6 +294,7 @@ public abstract class AbstractMap implements IMap, IObserver {
             case JUNGLE -> getJungleEmptyFieldVector();
             case STEPPE -> getSteppeEmptyFieldVector();
         };
+        System.out.println("Attempting to spawn plant at: " + position);
         // Do not spawn a grass object if there is no more space available
         if (position == null) return;
         // Create a plant object and add it to the map
@@ -273,11 +302,15 @@ public abstract class AbstractMap implements IMap, IObserver {
             case JUNGLE -> new Bush(this, position, bushEnergy);
             case STEPPE -> new Grass(this, position, grassEnergy);
         };
+        System.out.println("Created new plant: " + plant);
         plant.add();
+        System.out.println("Notified plant observer\n");
     }
 
     private Vector2D getJungleEmptyFieldVector() {
-        return getSegmentEmptyFieldVector(null, jungleLowerleft, jungleUpperRight);
+        Vector2D initialPosition = Vector2D.randomVector(jungleLowerleft.getX(), jungleUpperRight.getX(),
+                                                         jungleLowerleft.getY(), jungleUpperRight.getY());
+        return getSegmentEmptyFieldVector(initialPosition, jungleLowerleft, jungleUpperRight);
     }
 
     private Vector2D getSteppeEmptyFieldVector() {
@@ -298,7 +331,10 @@ public abstract class AbstractMap implements IMap, IObserver {
         while (count++ < segmentsCount && position == null) {
             Vector2D segmentLowerLeft  = getSegmentLowerLeft(segmentIdx);
             Vector2D segmentUpperRight = getSegmentUpperRight(segmentIdx);
-            Vector2D initialPosition   = count > 0 ? segmentLowerLeft : null;
+            Vector2D initialPosition;
+            if (count > 0) initialPosition = segmentLowerLeft;
+            else initialPosition = Vector2D.randomVector(segmentLowerLeft.getX(), segmentUpperRight.getX(),
+                                                         segmentLowerLeft.getY(), segmentUpperRight.getY());
             position = getSegmentEmptyFieldVector(initialPosition, segmentLowerLeft, segmentUpperRight);
             segmentIdx = (segmentIdx + 1) % segmentsCount;
         }
@@ -333,17 +369,15 @@ public abstract class AbstractMap implements IMap, IObserver {
         };
     }
 
-    private Vector2D getSegmentEmptyFieldVector(Vector2D initialPosition, Vector2D lowerLeft, Vector2D upperRight) {
+    private Vector2D getSegmentEmptyFieldVector(Vector2D position, Vector2D lowerLeft, Vector2D upperRight) {
         int minX = lowerLeft.getX();
         int maxX = upperRight.getX();
         int minY = lowerLeft.getY();
         int maxY = upperRight.getY();
-        // Choose the first vector randomly if is not specified
-        Vector2D position = initialPosition == null ? Vector2D.randomVector(minX, maxX, minY, maxY) : initialPosition;
         // Calculate segment dimensions
         int segmentWidth = maxX - minX + 1;
         int segmentHeight = maxY - minY + 1;
-        int i = initialPosition.getX() * segmentHeight + initialPosition.getY();
+        int i = position.getX() * segmentHeight + position.getY();
         int segmentFieldsCount = segmentWidth * segmentHeight;
         // Loop over subsequent fields till a field is not empty
         while (!isEmptyField(position)) {

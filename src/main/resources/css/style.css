@@ -1,11 +1,19 @@
+.gridPane Line {
+    -fx-stroke: red;
+}
+
 .simulationsContainer {
     -fx-background-color: black;
 }
 
-.simulationBoxContainer {
-    -fx-border-color: #333;
+.test {
+    -fx-border-color: blue;
+    -fx-background-color: yellow;
+    -fx-border-width: 10px;
 }
 
-.simulationBox {
-    -fx-background-color: #111;
+.cellTexture { /* FIXME */
+    -fx-border-width: 20px;
+    -fx-background-color: blue;
+    -fx-padding: 5px;
 }

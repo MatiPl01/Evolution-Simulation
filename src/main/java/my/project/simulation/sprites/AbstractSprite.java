@@ -2,6 +2,7 @@ package my.project.simulation.sprites;
 
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.maps.IMap;
+import my.project.simulation.utils.Vector2D;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -9,10 +10,25 @@ import java.util.Set;
 public abstract class AbstractSprite implements ISprite {
     protected final IMap map;
     protected final Set<IObserver> observers = new HashSet<>();
+    protected Vector2D position;
 
-    protected AbstractSprite(IMap map) {
+    protected AbstractSprite(IMap map, Vector2D position) {
+        System.out.println("In super");
         this.map = map;
+        this.position = position;
+        // Add map observer
         addObserver((IObserver) map);
+        System.out.println("Added map observer");
+    }
+
+    @Override
+    public Vector2D getPosition() {
+        return position;
+    }
+
+    @Override
+    public IMap getMap() {
+        return map;
     }
 
     @Override
