@@ -1,5 +1,6 @@
 package my.project.simulation.engine;
 
+import javafx.scene.layout.Pane;
 import my.project.gui.simulation.IVisualizer;
 import my.project.gui.simulation.SimulationVisualizer;
 import my.project.simulation.maps.IMap;
@@ -12,18 +13,25 @@ public class SimulationEngine implements IEngine, Runnable {
 
     @Override
     public void run() {
-        // Implement map refreshing with timeout
+        // TODO - Implement map refreshing with timeout with checking if visualization is paused
+        for (IVisualizer visualizer: visualizers.values()) {
+            visualizer.drawGrid();
+        }
     }
 
-    public void addVisualizer(IMap map) {
-        visualizers.put(map, new SimulationVisualizer(map));
+    @Override
+    public void addData(IMap map, Pane parentPane) {
+        visualizers.put(map, new SimulationVisualizer(map, parentPane));
     }
 
-    public void removeVisualizer(IMap map) {
+    @Override
+    public void removeData(IMap map) {
         visualizers.remove(map);
     }
 
-    public void requestNewFrame() {
-
+    private void requestNewFrame() {
+        for (IMap map: visualizers.keySet()) {
+            map.update();
+        }
     }
 }

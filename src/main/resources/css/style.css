@@ -1,0 +1,11 @@
+.simulationsContainer {
+    -fx-background-color: black;
+}
+
+.simulationBoxContainer {
+    -fx-border-color: #333;
+}
+
+.simulationBox {
+    -fx-background-color: #111;
+}

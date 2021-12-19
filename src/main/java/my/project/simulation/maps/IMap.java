@@ -4,6 +4,8 @@ import my.project.simulation.enums.MapArea;
 import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.Vector2D;
 
+import java.util.List;
+
 public interface IMap {
     void addSprite(ISprite sprite);
 
@@ -24,4 +26,6 @@ public interface IMap {
     int getStartEnergy();
 
     int getMinBreedEnergy();
+
+    List<Vector2D> getMapBoundingRect();
 }

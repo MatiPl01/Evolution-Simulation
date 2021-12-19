@@ -32,7 +32,7 @@ public class Animal extends AbstractSprite {
         this.energy = map.getStartEnergy();
         this.currPosition = initialPosition;
         this.direction = generateRandomDirection();
-        this.genesCounts = createRotationPreferences(genome);
+        this.genesCounts = calculateGenesCounts(genome);
     }
 
     public Animal(IMap map, Vector2D initialPosition, int energy, int[] genome) {
@@ -41,7 +41,7 @@ public class Animal extends AbstractSprite {
         this.energy = energy;
         this.currPosition = initialPosition;
         this.direction = generateRandomDirection();
-        this.genesCounts = createRotationPreferences(genome);
+        this.genesCounts = calculateGenesCounts(genome);
     }
 
     @Override
@@ -75,9 +75,7 @@ public class Animal extends AbstractSprite {
         return energy;
     }
 
-    public int[] getGenome() {
-        return genome;
-    }
+    public List<Integer> getGenome() { return Arrays.stream(genome).boxed().toList(); }
 
     public int getDaysAlive() {
         return daysAlive;
@@ -91,6 +89,12 @@ public class Animal extends AbstractSprite {
         return countDescendants(this);
     }
 
+    public static List<Integer> getPossibleGenes() {
+        List<Integer> genes = new ArrayList<>();
+        for (int i = MIN_GENE_NUM; i <= MAX_GENE_NUM; i++) genes.add(i);
+        return genes;
+    }
+
     public void update() {
         // Update animal's state only if an animal is alive
         // (only if it has energy greater than 0)
@@ -101,7 +105,7 @@ public class Animal extends AbstractSprite {
             decreaseEnergy(map.getMoveEnergy());
             // Delete an animal if its energy dropped below 0
             if (energy <= 0) remove();
-                // Otherwise, increment days alive counter
+            // Otherwise, increment days alive counter
             else daysAlive++;
         }
     }
@@ -132,7 +136,7 @@ public class Animal extends AbstractSprite {
         for (IObserver observer: observers) observer.changeSpritePosition(this);
     }
 
-    private int[] createRotationPreferences(int[] currGenome) {
+    private int[] calculateGenesCounts(int[] currGenome) {
         // counts[i] - total number of occurrences of digits that are
         //             not greater than i
         int[] counts = new int[MAX_GENE_NUM - MIN_GENE_NUM + 1];

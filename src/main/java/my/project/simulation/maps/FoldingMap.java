@@ -3,9 +3,10 @@ package my.project.simulation.maps;
 import my.project.simulation.utils.Vector2D;
 
 public class FoldingMap extends AbstractMap {
-    FoldingMap(int width, int height, double jungleRatio,
-              int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy) {
-        super(width, height, jungleRatio, startEnergy, moveEnergy, bushEnergy, grassEnergy);
+    public FoldingMap(int width, int height, double jungleRatio,
+                      int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
+                      int animalsCount) {
+        super(width, height, jungleRatio, startEnergy, moveEnergy, bushEnergy, grassEnergy, animalsCount);
     }
 
     @Override

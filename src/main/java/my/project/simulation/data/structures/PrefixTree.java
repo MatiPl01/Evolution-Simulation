@@ -2,89 +2,105 @@ package my.project.simulation.data.structures;
 
 import java.util.*;
 
-class Node<T> {
-    private final List<Node<T>> branches;
-    private final Node<T> parent;
-    private final T value;
+class TreeNode<K, V> {
+    private final Set<V> values = new HashSet<>();
+    private final List<TreeNode<K, V>> branches;
+    private final TreeNode<K, V> parent;
+    private final K key;
     private long count = 0;
 
-    Node(int branchesCount, T value, Node<T> parent) {
-        this.value = value;
+    TreeNode(int branchesCount, K key, TreeNode<K, V> parent) {
+        this.key = key;
         this.parent = parent;
         this.branches = new ArrayList<>();
         for (int i = 0; i < branchesCount; i++) branches.add(null);
     }
 
-    public List<Node<T>> getBranches() {
+    List<TreeNode<K, V>> getBranches() {
         return branches;
-    }
-
-    public void setBranch(int idx, Node<T> nextNode) {
-        branches.set(idx, nextNode);
-    }
-
-    public void incrementCount() {
-        count++;
-    }
-
-    public void decrementCount() {
-        count--;
     }
 
     public long getCount() {
         return count;
     }
 
-    public T getValue() {
-        return value;
+    public K getKey() {
+        return key;
     }
 
-    public Node<T> getParent() {
+    public Set<V> getValues() {
+        return values;
+    }
+
+    public void addValue(V value) {
+        values.add(value);
+    }
+
+    public void removeValue(V value) {
+        values.remove(value);
+    }
+
+    public TreeNode<K, V> getParent() {
         return parent;
+    }
+
+    void setBranch(int idx, TreeNode<K, V> nextNode) {
+        branches.set(idx, nextNode);
+    }
+
+    void incrementCount() {
+        count++;
+    }
+
+    void decrementCount() {
+        count--;
     }
 }
 
-public class PrefixTree<T> { // inserted data must be a list
-    private final Node<T> root;
-    private final Map<T, Integer> mappedValues;
-    private final Set<Node<T>> maxCountLeaves = new HashSet<>();
+public class PrefixTree<K, V> { // inserted data must be a list
+    private final TreeNode<K, V> root;
+    private final Map<K, Integer> mappedKeys;
+    private final Set<TreeNode<K, V>> maxCountLeaves = new HashSet<>();
     private final int branchesCount;
     private long maxCount = 0;
 
-    public PrefixTree(List<T> possibleValues) {
-        this.mappedValues = assignIndices(possibleValues);
-        this.branchesCount = possibleValues.size();
-        this.root = new Node<>(branchesCount, null, null);
+    public PrefixTree(List<K> possibleKeys) {
+        this.mappedKeys = assignIndices(possibleKeys);
+        this.branchesCount = possibleKeys.size();
+        this.root = new TreeNode<>(branchesCount, null, null);
     }
 
-    private Map<T, Integer> assignIndices(List<T> possibleValues) {
-        Map<T, Integer> map = new HashMap<>();
+    private Map<K, Integer> assignIndices(List<K> possibleKeys) {
+        Map<K, Integer> map = new HashMap<>();
         int i = 0;
-        for (T value: possibleValues) map.put(value, i++);
+        for (K key: possibleKeys) map.put(key, i++);
         return map;
     }
 
-    private int getIndex(T value) {
-        return mappedValues.get(value);
+    private int getIndex(K key) {
+        return mappedKeys.get(key);
     }
 
-    public void insert(List<T> data) {
-        Node<T> currNode = root;
-        for (T value: data) {
-            int idx = getIndex(value);
+    public void insert(List<K> keys, V value) {
+        TreeNode<K, V> currNode = root;
+        for (K key: keys) {
+            int idx = getIndex(key);
             // We have to ensure that a node which is not a leaf
             // won't be stored in the maxCountLeaves Set
             maxCountLeaves.remove(currNode);
 
-            Node<T> nextNode = currNode.getBranches().get(idx);
+            TreeNode<K, V> nextNode = currNode.getBranches().get(idx);
             if (nextNode == null) {
-                nextNode = new Node<>(branchesCount, value, currNode);
+                nextNode = new TreeNode<>(branchesCount, key, currNode);
                 currNode.setBranch(idx, nextNode);
             } else {
                 nextNode.incrementCount();
             }
             currNode = nextNode;
         }
+
+        // Add value to the leaf node
+        currNode.addValue(value);
 
         // Update the Set of leaves which have max count
         long currCount = currNode.getCount();
@@ -97,14 +113,14 @@ public class PrefixTree<T> { // inserted data must be a list
         }
     }
 
-    public void remove(List<T> data) throws NoSuchElementException {
-        Node<T> currNode = root;
-        for (T value: data) {
-            int idx = getIndex(value);
+    public void remove(List<K> keys) throws NoSuchElementException {
+        TreeNode<K, V> currNode = root;
+        for (K key: keys) {
+            int idx = getIndex(key);
 
-            Node<T> nextNode = currNode.getBranches().get(idx);
+            TreeNode<K, V> nextNode = currNode.getBranches().get(idx);
             if (nextNode == null) {
-                throw new NoSuchElementException("Data: " + data + " was not found in the PrefixTree");
+                throw new NoSuchElementException("Keys: " + keys + " were not found in the PrefixTree");
             } else {
                 nextNode.decrementCount();
                 // Remove a subtree if the next node is the last node (counter dropped to 0)
@@ -117,23 +133,43 @@ public class PrefixTree<T> { // inserted data must be a list
         }
     }
 
-    public List<List<T>> getMaxCountData() {
-        List<List<T>> result = new ArrayList<>();
-        for (Node<T> leaf: maxCountLeaves) {
-            result.add(getLeafParentsData(leaf));
+    public Set<V> getValues(List<K> keys) throws NoSuchElementException {
+        TreeNode<K, V> currNode = root;
+        for (K key: keys) {
+            int idx = getIndex(key);
+            currNode = currNode.getBranches().get(idx);
+            if (currNode == null) {
+                throw new NoSuchElementException("Keys: " + keys + " were not found in the PrefixTree");
+            }
+        }
+        return currNode.getValues();
+    }
+
+    public List<List<K>> getMaxCountKeys() {
+        List<List<K>> result = new ArrayList<>();
+        for (TreeNode<K, V> leaf: maxCountLeaves) {
+            result.add(getLeafKeys(leaf));
         }
         return result;
     }
 
-    public List<T> getLeafParentsData(Node<T> node) {
-        Node<T> currNode = node;
-        List<T> result = new ArrayList<>();
+    public List<K> getLeafKeys(TreeNode<K, V> node) {
+        TreeNode<K, V> currNode = node;
+        List<K> result = new ArrayList<>();
 
-        while (currNode.getValue() != null) {
-            result.add(currNode.getValue());
+        while (currNode.getKey() != null) {
+            result.add(currNode.getKey());
             currNode = currNode.getParent();
         }
         Collections.reverse(result);
+        return result;
+    }
+
+    public Set<V> getMaxCountValues() {
+        Set<V> result = new HashSet<>();
+        for (TreeNode<K, V> leaf: maxCountLeaves) {
+            result.addAll(leaf.getValues());
+        }
         return result;
     }
 }
