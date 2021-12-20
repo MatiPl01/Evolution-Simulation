@@ -1,19 +1,50 @@
-.gridPane Line {
-    -fx-stroke: red;
-}
+/*.gridPane Line {*/
+/*    -fx-stroke: #492a0d;*/
+/*}*/
 
 .simulationsContainer {
     -fx-background-color: black;
 }
 
-.test {
-    -fx-border-color: blue;
-    -fx-background-color: yellow;
-    -fx-border-width: 10px;
+.cellTexture {
+    -fx-background-color: #492a0d;
+    -fx-background-insets: -1px;
 }
 
-.cellTexture { /* FIXME */
-    -fx-border-width: 20px;
-    -fx-background-color: blue;
-    -fx-padding: 5px;
+.cellLabel {
+    -fx-border-width: 1px;
+    -fx-background-color: #492a0d;
+    -fx-border-color: #391d07;
+    -fx-text-fill: #fff;
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: #222;
+    -fx-border-color: transparent;
+}
+
+.scroll-bar:horizontal, .scroll-bar:vertical{
+    -fx-background-color:transparent;
+}
+
+.increment-button, .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track{
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0em;
+}
+
+.scroll-bar:horizontal .thumb,
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #777;
+    -fx-background-radius: 5em;
+}
+.scroll-pane > .corner {
+    -fx-background-color: black;
 }

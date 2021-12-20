@@ -1,6 +1,6 @@
 package my.project.simulation.maps;
 
-import my.project.gui.simulation.visualization.GridBuilder;
+import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.data.structures.PrefixTree;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.enums.MapArea;
@@ -10,7 +10,6 @@ import my.project.simulation.utils.Random;
 import my.project.simulation.utils.Vector2D;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class AbstractMap implements IMap, IObserver {
     private static final double MIN_BREED_ENERGY_RATIO = .5;
@@ -34,7 +33,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     private int animalsCount;
     private int animalsDiedCount = 0;
     private int plantsCount = 0;
-    private GridBuilder gridBuilder;
+    private IBuilder gridBuilder;
 
     // TODO - add input type checking (on a frontEnd side)
     AbstractMap(int width, int height, double jungleRatio,
@@ -65,8 +64,6 @@ public abstract class AbstractMap implements IMap, IObserver {
             throw new IllegalArgumentException("Cannot change position of a sprite which is not an animal");
         } else if (animal.getPosition() != animal.getPrevPosition()) {
             // Remove an animal from the previous position on a map
-            System.out.println("Calling removeAnimal from changeSpritePosition");
-            System.out.println("Moving animal from: " + animal.getPrevPosition() + " to: " + animal.getPosition());
             removeAnimal(animal, animal.getPrevPosition());
             // Add an animal at a new position on the map
             placeAnimal(animal);
@@ -77,7 +74,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void removeSprite(ISprite sprite) throws NoSuchElementException {
         // If a sprite is an animal object
         if (sprite instanceof Animal animal) {
-            System.out.println("\n>>> Calling removeAnimal from removeSprite");
+//            System.out.println("\n>>> Calling removeAnimal from removeSprite");
             removeAnimal(animal, animal.getPosition());
             animalsDiedCount++;
             genotypesTree.remove(animal.getGenome());
@@ -96,10 +93,13 @@ public abstract class AbstractMap implements IMap, IObserver {
             placeAnimal(animal);
             animalsCount++;
             genotypesTree.insert(animal.getGenome(), animal);
-            System.out.println("Inserted genome: " + animal.getGenome());
-            System.out.println(genotypesTree.getMaxCountValues());
-            System.out.println(genotypesTree.getValues(animal.getGenome()));
-            System.out.println("\n\n\n");
+            System.out.println("Dominant genotypes: ");
+            for (List<Integer> genotype: genotypesTree.getMaxCountKeys()) {
+                System.out.println(genotype);
+                System.out.println("\tAnimals having this genotype:");
+                System.out.println("\t" + genotypesTree.getValues(genotype));
+            }
+            System.out.println("\n");
         }
         // If a sprite is a plant object
         else if (sprite instanceof AbstractPlant) {
@@ -116,12 +116,12 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
-    public void setGridBuilder(GridBuilder gridBuilder) {
+    public void setGridBuilder(IBuilder gridBuilder) {
         this.gridBuilder = gridBuilder;
     }
 
     @Override
-    public GridBuilder getGridBuilder() {
+    public IBuilder getGridBuilder() {
         return gridBuilder;
     }
 
@@ -138,10 +138,17 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     @Override
     public void update() {
-        updateAnimals();
-        feedAnimals();
-        breedAnimals();
-        spawnPlants();
+        if (areAnimalsAlive()) {
+            updateAnimals();
+            feedAnimals();
+            breedAnimals();
+            spawnPlants();
+        }
+    }
+
+    @Override
+    public boolean areAnimalsAlive() {
+        return animalsCount > animalsDiedCount;
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -192,7 +199,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private void placeAnimal(Animal animal) {
         Vector2D position = animal.getPosition();
-        System.out.println("Placing animal " + animal.getID() + " at " + position);
+//        System.out.println("Placing animal " + animal.getID() + " at " + position);
         // Create the new animals list if there is no animals list on the specified position
         if (mapAnimals.get(position) == null) mapAnimals.put(position, new TreeSet<>(new EnergyComparator()));
         // Add an animal to the list
@@ -200,42 +207,63 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Add eaten plants to the list awaiting update
         AbstractPlant plant = mapPlants.get(position);
         if (plant != null) eatenPlants.add(plant);
-        System.out.println("ANIMAL PLACED");
+//        System.out.println("ANIMAL PLACED");
     }
 
     private void removeAnimal(Animal animal, Vector2D position) throws NoSuchElementException {
         Set<Animal> animals = mapAnimals.get(position);
-        System.out.println("In removeAnimal trying to remove with id: " + animal.getID() + " from position " + position);
-        System.out.println("Animal current position: " + animal.getPosition() + ", Animal previous position: " + animal.getPrevPosition());
-        System.out.println("Animal current direction: " + animal.getDirection());
-        System.out.println("All animals at: " + position + ": " + animals.stream().map(Animal::getID).collect(Collectors.toList()));
-        System.out.println("All animals at: " + animal.getPrevPosition() + ": " + mapAnimals.get(animal.getPrevPosition()).stream().map(Animal::getID).collect(Collectors.toList()));
-        boolean found = false;
-        for (Vector2D v: mapAnimals.keySet()) {
-            for (Animal b: mapAnimals.get(v)) {
-                if (b.getID() == animal.getID()) {
-                    found = true;
-                    System.out.println("Found animal with id: " + animal.getID() + " at: " + v);
+        if (animals != null && animals.contains(animal)) animals.remove(animal);
+        // Sometimes Sets goes crazy when dealing with mutable objects
+        // and can't see that they store a particular object. In such case,
+        // we will compare all animals from a set one by one with the animal
+        // which will be removed.
+        else {
+            Iterator<Animal> it = animals.iterator();
+            while (it.hasNext()) {
+                Animal currentAnimal = it.next();
+                // Remove the current animal if found an animal with the same
+                // id as an animal which we want to remove
+                if (currentAnimal.getID() == animal.getID()) {
+                    it.remove();
+                    return;
                 }
             }
-        }
-        if (!found) System.out.println("THERE IS NO ANIMAL WITH id: " + animal.getID() + " ON A MAP (probably deleted before)");
-        System.out.println("Animal positions history: " + animal.getPosHist());
-        System.out.println("Is contained? " + animals.contains(animal));
-
-//        if (animals != null && animals.contains(animal)) animals.remove(animal);
-        boolean removed = false;
-        Iterator<Animal> it = animals.iterator();
-        while (it.hasNext()) {
-            Animal animal1 = it.next();
-            if (animal1.getID() == animal.getID()) { it.remove(); removed=true; }
-        }
-//        else {
-        if (!removed) {
-            System.out.println(">>>>>>>>>> ERROR <<<<<<<<<<<");
+            // Throw an exception if the desired animal wasn't found
             throw new NoSuchElementException("Sprite " + animal + " is not on the map");
         }
+
+//        System.out.println("In removeAnimal trying to remove with id: " + animal.getID() + " from position " + position);
+//        System.out.println("Animal current position: " + animal.getPosition() + ", Animal previous position: " + animal.getPrevPosition());
+//        System.out.println("Animal current direction: " + animal.getDirection());
+//        System.out.println("All animals at: " + position + ": " + animals.stream().map(Animal::getID).collect(Collectors.toList()));
+//        System.out.println("All animals at: " + animal.getPrevPosition() + ": " + mapAnimals.get(animal.getPrevPosition()).stream().map(Animal::getID).collect(Collectors.toList()));
+//        boolean found = false;
+//        for (Vector2D v: mapAnimals.keySet()) {
+//            for (Animal b: mapAnimals.get(v)) {
+//                if (b.getID() == animal.getID()) {
+//                    found = true;
+//                    System.out.println("Found animal with id: " + animal.getID() + " at: " + v);
+//                }
+//            }
 //        }
+//        if (!found) System.out.println("THERE IS NO ANIMAL WITH id: " + animal.getID() + " ON A MAP (probably deleted before)");
+//        System.out.println("Animal positions history: " + animal.getPosHist());
+//        System.out.println("Is contained? " + animals.contains(animal));
+//
+//        if (animals != null && animals.contains(animal)) animals.remove(animal);
+//        else throw new NoSuchElementException("Sprite " + animal + " is not on the map");
+//        boolean removed = false;
+//        Iterator<Animal> it = animals.iterator();
+//        while (it.hasNext()) {
+//            Animal animal1 = it.next();
+//            if (animal1.getID() == animal.getID()) { it.remove(); removed=true; }
+//        }
+////        else {
+//        if (!removed) {
+//            System.out.println(">>>>>>>>>> ERROR <<<<<<<<<<<");
+//            throw new NoSuchElementException("Sprite " + animal + " is not on the map");
+//        }
+////        }
 
 
 //        Set<Animal> animalsCurrPosition = mapAnimals.get(animal.getPosition());
@@ -326,7 +354,7 @@ public abstract class AbstractMap implements IMap, IObserver {
                 // Loop over all selected animals and feed them
                 for (Animal animal: animals) animal.feed(energyPart);
             } catch (ArithmeticException e) {
-                System.out.println(">>> all animals at field: " + mapAnimals.get(plant.getPosition()));
+//                System.out.println(">>> all animals at field: " + mapAnimals.get(plant.getPosition()));
                 e.printStackTrace();
             }
             plant.remove();
@@ -394,6 +422,7 @@ public abstract class AbstractMap implements IMap, IObserver {
             case STEPPE -> new Grass(this, position, grassEnergy);
         };
         plant.add();
+//        System.out.println("ADDED PLANT");
     }
 
     private Vector2D getJungleEmptyFieldVector() {
@@ -420,10 +449,8 @@ public abstract class AbstractMap implements IMap, IObserver {
         while (count++ < segmentsCount && position == null) {
             Vector2D segmentLowerLeft  = getSegmentLowerLeft(segmentIdx);
             Vector2D segmentUpperRight = getSegmentUpperRight(segmentIdx);
-            Vector2D initialPosition;
-            if (count > 0) initialPosition = segmentLowerLeft;
-            else initialPosition = Vector2D.randomVector(segmentLowerLeft.getX(), segmentUpperRight.getX(),
-                                                         segmentLowerLeft.getY(), segmentUpperRight.getY());
+            Vector2D initialPosition = Vector2D.randomVector(segmentLowerLeft.getX(), segmentUpperRight.getX(),
+                                                             segmentLowerLeft.getY(), segmentUpperRight.getY());
             // Continue if the area is a jungle (for example, when there is no segment with
             // specified segmentIdx, because a jungle occupies a whole (or almost whole) map)
             position = getSegmentEmptyFieldVector(initialPosition, segmentLowerLeft, segmentUpperRight);

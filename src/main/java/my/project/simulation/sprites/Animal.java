@@ -37,7 +37,7 @@ public class Animal extends AbstractSprite {
         this.prevPosition = initialPosition;
         this.genome = generateRandomGenome();
         this.energy = map.getStartEnergy();
-        System.out.println(">>> ANIMAL ENERGY " + energy);
+//        System.out.println(">>> ANIMAL ENERGY " + energy);
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
         addObserver(new GuiAnimalSprite(this));
@@ -56,11 +56,6 @@ public class Animal extends AbstractSprite {
         addObserver(new GuiAnimalSprite(this));
 
         posHist.add(initialPosition); // TODO - REMOVE ME
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) ID;
     }
 
     @Override
@@ -119,7 +114,9 @@ public class Animal extends AbstractSprite {
         // (only if it has energy greater than 0)
         if (energy > 0) {
             int angleNum = chooseRotationAngleNum();
+            MapDirection prevDirection = direction;
             rotate(angleNum);
+//            System.out.println("Changed animal direction from: " + prevDirection + " to: " + direction);
             if (canMove(angleNum)) move();
             decreaseEnergy(map.getMoveEnergy());
             // Otherwise, increment days alive counter
@@ -134,7 +131,8 @@ public class Animal extends AbstractSprite {
 
     public void rotate(int angleNum) {
         direction = direction.rotate(angleNum);
-//        notifyPositionChanged();
+        prevPosition = position;
+        notifyPositionChanged();
     }
 
     private boolean canMove(int angleNum) {
@@ -148,19 +146,21 @@ public class Animal extends AbstractSprite {
     public void move() {
         Vector2D moveVector = direction.toUnitVector();
         Vector2D newPosition = map.getNextPosition(position, moveVector);
-        System.out.println("\nTrying to move animal from: " + position + " to: " + newPosition);
+//        System.out.println("\nTrying to move animal from: " + position + " to: " + newPosition);
+//        System.out.println("Animal direction: " + direction);
         // Move an animal only if a new position will be different to the current one
         prevPosition = position;
         position = newPosition;
 
+//        System.out.println("Moved animal from: " + prevPosition + " to: " + position);
         posHist.add(newPosition); // TODO - REMOVE ME
 
         notifyPositionChanged();
-        System.out.println("Updated animal coordinates: prev: " + prevPosition + ", curr: " + position);
+//        System.out.println("Updated animal coordinates: prev: " + prevPosition + ", curr: " + position);
     }
 
     private void notifyPositionChanged() {
-        System.out.println("Animal observers: " + observers + " count: " + observers.size());
+//        System.out.println("Animal observers: " + observers + " count: " + observers.size());
         for (IObserver observer: observers) observer.changeSpritePosition(this);
     }
 
@@ -236,11 +236,11 @@ public class Animal extends AbstractSprite {
     }
 
     public void breed(Animal other) {
-        System.out.println("TRYING TO BREED");
+//        System.out.println("TRYING TO BREED");
         // Do not bread if at least one of animals has not enough energy
 //        System.out.println("Energy: " + energy + ", " + other.energy + ", min: " + map.getMinBreedEnergy());
         if (!canBreed() || !other.canBreed()) return;
-        System.out.println("BREEDING");
+//        System.out.println("BREEDING");
         // Calculate the energy lost by parents during reproduction
         int deltaEnergy1 = (int)(energy * BREED_ENERGY_LOSS_RATIO);
         int deltaEnergy2 = (int)(other.energy * BREED_ENERGY_LOSS_RATIO);

@@ -5,7 +5,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import my.project.gui.simulation.visualization.GridBuilder;
+import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.utils.Vector2D;
@@ -16,7 +16,7 @@ import java.io.FileNotFoundException;
 
 abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     protected final ISprite sprite;
-    protected final GridBuilder gridBuilder;
+    protected final IBuilder gridBuilder;
     protected final VBox vBox = new VBox();
     protected final ImageView imageView = new ImageView();
 

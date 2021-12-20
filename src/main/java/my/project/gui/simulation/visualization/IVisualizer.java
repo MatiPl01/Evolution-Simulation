@@ -6,6 +6,8 @@ public interface IVisualizer {
 
     void pauseVisualization();
 
+    boolean isPaused();
+
     void showNewFrame();
 
     void drawGrid();

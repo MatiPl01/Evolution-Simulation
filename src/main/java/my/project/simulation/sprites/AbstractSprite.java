@@ -31,7 +31,7 @@ public abstract class AbstractSprite implements ISprite {
 
     @Override
     public void remove() {
-        System.out.println("<<>> Called remove()");
+//        System.out.println("<<>> Called remove()");
         for (IObserver observer: observers) observer.removeSprite(this);
     }
 

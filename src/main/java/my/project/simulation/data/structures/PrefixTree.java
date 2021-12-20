@@ -124,7 +124,7 @@ public class PrefixTree<K, V> { // inserted data must be a list
     }
 
     public void remove(List<K> keys) throws NoSuchElementException {
-        System.out.println(">>>>> REMOVING GENOTYPE: " + keys);
+//        System.out.println(">>>>> REMOVING GENOTYPE: " + keys);
         TreeNode<K, V> currNode = root;
 
         int delme = 1;
@@ -134,13 +134,13 @@ public class PrefixTree<K, V> { // inserted data must be a list
         for (K key: keys) {
             int idx = getIndex(key);
 
-            System.out.println("Step " + delme++ + " key: " + key + " branches: " + currNode.getBranches());
+//            System.out.println("Step " + delme++ + " key: " + key + " branches: " + currNode.getBranches());
 
             TreeNode<K, V> nextNode = currNode.getBranches().get(idx);
             nextNode.decrementCount();
             // Remove a subtree if the next node is the last node (counter dropped to 0)
             if (nextNode.getCount() == 0) {
-                System.out.println("    -------->  CUTTING OFF PART OF A TREE");
+//                System.out.println("    -------->  CUTTING OFF PART OF A TREE");
                 currNode.setBranch(idx, null);
                 return;
             }

@@ -11,7 +11,7 @@ import java.io.FileInputStream;
 import java.util.Objects;
 
 public class App extends Application {
-    private static final String windowTitle = "Evolution Animation";
+    private static final String windowTitle = "Evolution Simulation";
     private static final String iconPath = "src/main/resources/images/icon.png";
 
     @Override
@@ -20,7 +20,6 @@ public class App extends Application {
         loader.setLocation(getClass().getResource("/fxml/SimulationsContainer.fxml"));
         HBox HBox = loader.load();
         Scene scene = new Scene(HBox);
-//        Application.setUserAgentStylesheet(Application.STYLESHEET_CASPIAN);
         String css = Objects.requireNonNull(getClass().getResource("/css/style.css")).toExternalForm();
         scene.getStylesheets().add(css);
         // Set the icon and the window title

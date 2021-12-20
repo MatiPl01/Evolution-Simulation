@@ -1,6 +1,6 @@
 package my.project.simulation.maps;
 
-import my.project.gui.simulation.visualization.GridBuilder;
+import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.utils.Vector2D;
 
@@ -25,9 +25,11 @@ public interface IMap {
 
     void initialize();
 
-    void setGridBuilder(GridBuilder gridBuilder);
+    void setGridBuilder(IBuilder gridBuilder);
 
     long getNewAnimalID();
 
-    GridBuilder getGridBuilder();
+    IBuilder getGridBuilder();
+
+    boolean areAnimalsAlive();
 }
