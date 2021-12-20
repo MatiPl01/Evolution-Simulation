@@ -18,41 +18,53 @@ public class Animal extends AbstractSprite {
     private static final double BREED_ENERGY_LOSS_RATIO = .25;
     private final String IMG_PATH = "src/main/resources/images/animals/leopard.png";
 
-    private Vector2D prevPosition = null;
+    private Vector2D prevPosition;
     private MapDirection direction;
     private final int[] genome;
     private final int[] genesCounts;
     private int energy;
     private int daysAlive = 0;
     private final List<Animal> children = new ArrayList<>();
+    // ID is a unique number referring to the animal
+    // (this number also indicates in which order animals appeared on a map)
+    private final long ID;
+
+    private final List<Vector2D> posHist = new ArrayList<>(); // TODO - REMOVE ME
 
     public Animal(IMap map, Vector2D initialPosition) {
         super(map, initialPosition);
+        this.ID = map.getNewAnimalID();
+        this.prevPosition = initialPosition;
         this.genome = generateRandomGenome();
-        System.out.println("Animal genome: " + Arrays.toString(genome));
         this.energy = map.getStartEnergy();
-        System.out.println("Animal energy: " + energy);
+        System.out.println(">>> ANIMAL ENERGY " + energy);
         this.direction = generateRandomDirection();
-        System.out.println("Animal direction: " + direction);
         this.genesCounts = calculateGenesCounts(genome);
-        System.out.println("Animal genes counts: " + Arrays.toString(genesCounts));
         addObserver(new GuiAnimalSprite(this));
-        System.out.println("Added animal Gui observer");
+
+        posHist.add(initialPosition); // TODO - REMOVE ME
     }
 
     public Animal(IMap map, Vector2D initialPosition, int energy, int[] genome) {
         super(map, initialPosition);
+        this.ID = map.getNewAnimalID();
         this.genome = genome;
         this.energy = energy;
+        this.prevPosition = initialPosition;
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
         addObserver(new GuiAnimalSprite(this));
-        System.out.println("Added animal Gui observer");
+
+        posHist.add(initialPosition); // TODO - REMOVE ME
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) ID;
     }
 
     @Override
     public String toString() {
-        System.out.println("Animal direction? " + direction);
         return switch(direction) {
             case NORTH     -> "N";
             case NORTHEAST -> "NE";
@@ -77,6 +89,10 @@ public class Animal extends AbstractSprite {
     public int getEnergy() {
         return energy;
     }
+
+    public long getID() { return ID; }
+
+    public MapDirection getDirection() { return direction; }
 
     public List<Integer> getGenome() { return Arrays.stream(genome).boxed().toList(); }
 
@@ -106,11 +122,10 @@ public class Animal extends AbstractSprite {
             rotate(angleNum);
             if (canMove(angleNum)) move();
             decreaseEnergy(map.getMoveEnergy());
-            // Delete an animal if its energy dropped below 0
-            if (energy <= 0) remove();
             // Otherwise, increment days alive counter
-            else daysAlive++;
-        }
+            daysAlive++;
+        // Otherwise, remove an animal
+        } else remove();
     }
 
     public void feed(int deltaEnergy) {
@@ -119,23 +134,33 @@ public class Animal extends AbstractSprite {
 
     public void rotate(int angleNum) {
         direction = direction.rotate(angleNum);
-        notifyPositionChanged();
+//        notifyPositionChanged();
     }
 
     private boolean canMove(int angleNum) {
         return angleNum == 0 || angleNum == MapDirection.values().length / 2;
     }
 
+    public List<Vector2D> getPosHist() { // TODO - REMOVE ME
+        return posHist;
+    }
+
     public void move() {
         Vector2D moveVector = direction.toUnitVector();
-        Vector2D nextPosition = map.getNextPosition(position, moveVector);
+        Vector2D newPosition = map.getNextPosition(position, moveVector);
+        System.out.println("\nTrying to move animal from: " + position + " to: " + newPosition);
         // Move an animal only if a new position will be different to the current one
         prevPosition = position;
-        position = nextPosition;
+        position = newPosition;
+
+        posHist.add(newPosition); // TODO - REMOVE ME
+
         notifyPositionChanged();
+        System.out.println("Updated animal coordinates: prev: " + prevPosition + ", curr: " + position);
     }
 
     private void notifyPositionChanged() {
+        System.out.println("Animal observers: " + observers + " count: " + observers.size());
         for (IObserver observer: observers) observer.changeSpritePosition(this);
     }
 
@@ -169,10 +194,7 @@ public class Animal extends AbstractSprite {
 
     private MapDirection generateRandomDirection() {
         MapDirection[] values = MapDirection.values();
-        System.out.println("Possible directions: " + values);
-        MapDirection v = values[Random.randInt(values.length - 1)];
-        System.out.println("Result: " + v);
-        return v;
+        return values[Random.randInt(values.length - 1)];
     }
 
     private int[] generateRandomGenome() {
@@ -213,9 +235,12 @@ public class Animal extends AbstractSprite {
         return energy >= map.getMinBreedEnergy();
     }
 
-    public Animal breed(Animal other) {
+    public void breed(Animal other) {
+        System.out.println("TRYING TO BREED");
         // Do not bread if at least one of animals has not enough energy
-        if (!canBreed() || !other.canBreed()) return null;
+//        System.out.println("Energy: " + energy + ", " + other.energy + ", min: " + map.getMinBreedEnergy());
+        if (!canBreed() || !other.canBreed()) return;
+        System.out.println("BREEDING");
         // Calculate the energy lost by parents during reproduction
         int deltaEnergy1 = (int)(energy * BREED_ENERGY_LOSS_RATIO);
         int deltaEnergy2 = (int)(other.energy * BREED_ENERGY_LOSS_RATIO);
@@ -229,7 +254,9 @@ public class Animal extends AbstractSprite {
         // Add a child to children lists of parents
         children.add(child);
         other.children.add(child);
-        return child;
+        child.add();
+//        System.out.println("Parent1 children: " + children);
+//        System.out.println("Parent2 children: " + other.children);
     }
 
     private long countDescendants(Animal animal) {

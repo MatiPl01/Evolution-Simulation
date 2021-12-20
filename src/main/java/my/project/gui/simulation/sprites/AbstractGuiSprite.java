@@ -15,9 +15,10 @@ import java.io.FileNotFoundException;
 
 
 abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
-    private final ISprite sprite;
-    private final GridBuilder gridBuilder;
+    protected final ISprite sprite;
+    protected final GridBuilder gridBuilder;
     protected final VBox vBox = new VBox();
+    protected final ImageView imageView = new ImageView();
 
     public AbstractGuiSprite(ISprite sprite) {
         this.sprite = sprite;
@@ -29,7 +30,7 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     public void initialize() {
         try {
             Image image = new Image(new FileInputStream(sprite.getImagePath()));
-            ImageView imageView = new ImageView(image);
+            imageView.setImage(image);
             imageView.setFitHeight(gridBuilder.getCellSize());
             imageView.setFitWidth(gridBuilder.getCellSize());
             imageView.setPreserveRatio(true);
@@ -50,7 +51,6 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     }
 
     public Vector2D getPosition() {
-        System.out.println("Sprite: " + sprite + " position: " + sprite.getPosition());
         return sprite.getPosition();
     }
 

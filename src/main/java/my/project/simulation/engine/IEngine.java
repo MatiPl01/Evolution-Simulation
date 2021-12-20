@@ -1,6 +1,7 @@
 package my.project.simulation.engine;
 
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.AnchorPane;
 import my.project.simulation.maps.IMap;
 
 public interface IEngine {
@@ -9,4 +10,6 @@ public interface IEngine {
     void addData(IMap map, ScrollPane parentContainer);
 
     void removeData(IMap map);
+
+    void renderNewFrame();
 }

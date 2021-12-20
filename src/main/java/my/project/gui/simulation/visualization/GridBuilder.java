@@ -1,5 +1,6 @@
 package my.project.gui.simulation.visualization;
 
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
@@ -100,10 +101,8 @@ public class GridBuilder {
         for (int i = 0; i <= mapUpperRight.getX(); i++) {
             for (int j = 0; j <= mapUpperRight.getY(); j++) {
                 if (map.getAreaType(new Vector2D(i, j)) == MapArea.STEPPE) {
-                    System.out.println(new Vector2D(i, j) + " is steppe");
                     loadTexture(STEPPE_DIRT_PATH, i + 1, j);
                 } else {
-                    System.out.println(new Vector2D(i, j) + " is jungle");
                     loadTexture(JUNGLE_DIRT_PATH, i + 1, j);
                 }
             }
@@ -138,17 +137,14 @@ public class GridBuilder {
     }
 
     public void addSprite(IGuiSprite guiSprite) {
-        System.out.println("Adding to grid: " + guiSprite.getNode());
         Vector2D position = guiSprite.getPosition();
         int gridX = position.getX() + 1;
         int gridY = gridHeight - position.getY() - 2;
-        System.out.println("Grid coordinates: x = " + gridX + ", y = " + gridY);
-        gridPane.add(guiSprite.getNode(), gridX, gridY, 1, 1);
+        System.out.println("Adding node: " + guiSprite.getNode() + " at position: " + guiSprite.getPosition());
+        Platform.runLater(() -> gridPane.add(guiSprite.getNode(), gridX, gridY, 1, 1));
     }
 
     public void removeSprite(IGuiSprite guiSprite) {
-        System.out.println("Removing Sprite from grid: " + guiSprite.getNode());
-        Vector2D position = guiSprite.getPosition();
-        gridPane.getChildren().remove(guiSprite.getNode());
+        Platform.runLater(() -> gridPane.getChildren().remove(guiSprite.getNode()));
     }
 }

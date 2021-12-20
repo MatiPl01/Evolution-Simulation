@@ -13,12 +13,10 @@ public abstract class AbstractSprite implements ISprite {
     protected Vector2D position;
 
     protected AbstractSprite(IMap map, Vector2D position) {
-        System.out.println("In super");
         this.map = map;
         this.position = position;
         // Add map observer
         addObserver((IObserver) map);
-        System.out.println("Added map observer");
     }
 
     @Override
@@ -33,6 +31,7 @@ public abstract class AbstractSprite implements ISprite {
 
     @Override
     public void remove() {
+        System.out.println("<<>> Called remove()");
         for (IObserver observer: observers) observer.removeSprite(this);
     }
 

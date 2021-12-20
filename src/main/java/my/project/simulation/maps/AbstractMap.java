@@ -10,6 +10,7 @@ import my.project.simulation.utils.Random;
 import my.project.simulation.utils.Vector2D;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractMap implements IMap, IObserver {
     private static final double MIN_BREED_ENERGY_RATIO = .5;
@@ -25,10 +26,12 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     protected final Map<Vector2D, SortedSet<Animal>> mapAnimals = new HashMap<>();
     protected final Map<Vector2D, AbstractPlant> mapPlants = new HashMap<>();
-    protected final List<AbstractPlant> eatenPlants = new ArrayList<>();
+    protected final Set<AbstractPlant> eatenPlants = new HashSet<>();
     protected final PrefixTree<Integer, Animal> genotypesTree = new PrefixTree<>(Animal.getPossibleGenes());
 
-    private int animalsAliveCount;
+    private final int initialAnimalsCount;
+
+    private int animalsCount;
     private int animalsDiedCount = 0;
     private int plantsCount = 0;
     private GridBuilder gridBuilder;
@@ -38,11 +41,11 @@ public abstract class AbstractMap implements IMap, IObserver {
                 int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
                 int animalsCount) {
         // Store initial values
+        this.initialAnimalsCount = animalsCount;
         this.startEnergy = startEnergy;
         this.moveEnergy = moveEnergy;
         this.bushEnergy = bushEnergy;
         this.grassEnergy = grassEnergy;
-        this.animalsAliveCount = animalsCount;
 
         // Calculate map upper-right bound vector
         this.mapUpperRight = new Vector2D(width - 1, height - 1);
@@ -60,8 +63,10 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void changeSpritePosition(ISprite sprite) throws IllegalArgumentException, NoSuchElementException {
         if (!(sprite instanceof Animal animal)) {
             throw new IllegalArgumentException("Cannot change position of a sprite which is not an animal");
-        } else {
+        } else if (animal.getPosition() != animal.getPrevPosition()) {
             // Remove an animal from the previous position on a map
+            System.out.println("Calling removeAnimal from changeSpritePosition");
+            System.out.println("Moving animal from: " + animal.getPrevPosition() + " to: " + animal.getPosition());
             removeAnimal(animal, animal.getPrevPosition());
             // Add an animal at a new position on the map
             placeAnimal(animal);
@@ -72,9 +77,9 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void removeSprite(ISprite sprite) throws NoSuchElementException {
         // If a sprite is an animal object
         if (sprite instanceof Animal animal) {
+            System.out.println("\n>>> Calling removeAnimal from removeSprite");
             removeAnimal(animal, animal.getPosition());
             animalsDiedCount++;
-            animalsAliveCount--;
             genotypesTree.remove(animal.getGenome());
         }
         // If a sprite is a plant object
@@ -89,8 +94,12 @@ public abstract class AbstractMap implements IMap, IObserver {
         // If a sprite is an animal object
         if (sprite instanceof Animal animal) {
             placeAnimal(animal);
-            animalsAliveCount++;
+            animalsCount++;
             genotypesTree.insert(animal.getGenome(), animal);
+            System.out.println("Inserted genome: " + animal.getGenome());
+            System.out.println(genotypesTree.getMaxCountValues());
+            System.out.println(genotypesTree.getValues(animal.getGenome()));
+            System.out.println("\n\n\n");
         }
         // If a sprite is a plant object
         else if (sprite instanceof AbstractPlant) {
@@ -123,11 +132,16 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
+    public long getNewAnimalID() {
+        return animalsCount + 1;
+    }
+
+    @Override
     public void update() {
-        spawnPlants();
         updateAnimals();
         feedAnimals();
         breedAnimals();
+        spawnPlants();
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -158,11 +172,8 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     public void initialize() {
-        randomlyPalceAnimals(animalsAliveCount);
-        System.out.println("=== ANIMALS SPAWNED ===\n");
-        spawnSinglePlant(MapArea.JUNGLE);
-        spawnSinglePlant(MapArea.STEPPE);
-        System.out.println("=== PLANTS SPAWNED ===\n");
+        randomlyPalceAnimals(initialAnimalsCount);
+        spawnPlants();
     }
 
     private void randomlyPalceAnimals(int animalsCount) {
@@ -174,16 +185,14 @@ public abstract class AbstractMap implements IMap, IObserver {
         for (int i = 0; i < animalsCount; i++) {
             Vector2D randomPosition = Vector2D.randomVector(minX, maxX, minY, maxY);
             Vector2D position = getSegmentEmptyFieldVector(randomPosition, mapLowerLeft, mapUpperRight);
-            System.out.println("Creating " + i + " animal: " + position + " " + randomPosition);
             Animal animal = new Animal(this, position);
-            System.out.println("Animal created");
             animal.add();
-            System.out.println("Observers notified");
         }
     }
 
     private void placeAnimal(Animal animal) {
         Vector2D position = animal.getPosition();
+        System.out.println("Placing animal " + animal.getID() + " at " + position);
         // Create the new animals list if there is no animals list on the specified position
         if (mapAnimals.get(position) == null) mapAnimals.put(position, new TreeSet<>(new EnergyComparator()));
         // Add an animal to the list
@@ -191,22 +200,97 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Add eaten plants to the list awaiting update
         AbstractPlant plant = mapPlants.get(position);
         if (plant != null) eatenPlants.add(plant);
+        System.out.println("ANIMAL PLACED");
     }
 
     private void removeAnimal(Animal animal, Vector2D position) throws NoSuchElementException {
         Set<Animal> animals = mapAnimals.get(position);
-        if (animals == null || !animals.remove(animal)) {
+        System.out.println("In removeAnimal trying to remove with id: " + animal.getID() + " from position " + position);
+        System.out.println("Animal current position: " + animal.getPosition() + ", Animal previous position: " + animal.getPrevPosition());
+        System.out.println("Animal current direction: " + animal.getDirection());
+        System.out.println("All animals at: " + position + ": " + animals.stream().map(Animal::getID).collect(Collectors.toList()));
+        System.out.println("All animals at: " + animal.getPrevPosition() + ": " + mapAnimals.get(animal.getPrevPosition()).stream().map(Animal::getID).collect(Collectors.toList()));
+        boolean found = false;
+        for (Vector2D v: mapAnimals.keySet()) {
+            for (Animal b: mapAnimals.get(v)) {
+                if (b.getID() == animal.getID()) {
+                    found = true;
+                    System.out.println("Found animal with id: " + animal.getID() + " at: " + v);
+                }
+            }
+        }
+        if (!found) System.out.println("THERE IS NO ANIMAL WITH id: " + animal.getID() + " ON A MAP (probably deleted before)");
+        System.out.println("Animal positions history: " + animal.getPosHist());
+        System.out.println("Is contained? " + animals.contains(animal));
+
+//        if (animals != null && animals.contains(animal)) animals.remove(animal);
+        boolean removed = false;
+        Iterator<Animal> it = animals.iterator();
+        while (it.hasNext()) {
+            Animal animal1 = it.next();
+            if (animal1.getID() == animal.getID()) { it.remove(); removed=true; }
+        }
+//        else {
+        if (!removed) {
+            System.out.println(">>>>>>>>>> ERROR <<<<<<<<<<<");
             throw new NoSuchElementException("Sprite " + animal + " is not on the map");
         }
-        // Remove the whole entry in a mapAnimals if removed the last animal
-        // from the current position
-        if (animals.size() == 0) mapAnimals.remove(position);
+//        }
+
+
+//        Set<Animal> animalsCurrPosition = mapAnimals.get(animal.getPosition());
+//        Set<Animal> animalsPrevPosition = mapAnimals.get(animal.getPrevPosition());
+//
+//        System.out.println("Curr animal: " + animal + " (" + animal.hashCode() + ")");
+//        System.out.println("Previous position: " + animal.getPrevPosition());
+//        System.out.println("Current position: " + animal.getPosition());
+//        System.out.println("All animals: " + mapAnimals);
+//        System.out.println("Received animalsCurrPosition: " + animalsCurrPosition);
+//        if (animalsCurrPosition != null) {
+//            for (Animal a : animalsCurrPosition) {
+//                System.out.println(a.getID() + " the same? " + (a.getID() == animal.getID()));
+//            }
+//            System.out.println("Is in current? " + animalsCurrPosition.contains(animal));
+//        }
+//        System.out.println("Received animalsPrevPosition: " + animalsPrevPosition);
+//        if (animalsPrevPosition != null) {
+//            for (Animal a : animalsPrevPosition) {
+//                System.out.println(a.getID() + " the same? " + (a.getID() == animal.getID()));
+//            }
+//            System.out.println("Is in previous? " + animalsPrevPosition.contains(animal));
+//        }
+//        System.out.println("\n");
+//
+//        if (animalsCurrPosition != null && animalsCurrPosition.contains(animal)) {
+//            animalsCurrPosition.remove(animal);
+//        } else if (animalsPrevPosition != null && animalsPrevPosition.contains(animal)) {
+//            animalsPrevPosition.remove(animal);
+//        } else {
+//            System.out.println("ERROR IS NOW !!!");
+//            if (animalsCurrPosition != null) {
+//                for (Animal currAnimal: animalsCurrPosition) {
+//                    if (currAnimal.getID() == animal.getID()) {
+//                        animalsCurrPosition.remove(currAnimal);
+//                        return;
+//                    }
+//                }
+//            }
+//            if (animalsPrevPosition != null) {
+//                for (Animal currAnimal: animalsPrevPosition) {
+//                    if (currAnimal.getID() == animal.getID()) {
+//                        animalsPrevPosition.remove(currAnimal);
+//                        return;
+//                    }
+//                }
+//            }
+//            throw new NoSuchElementException("Sprite " + animal + " is not on the map");
+//        }
     }
 
     private void placePlant(AbstractPlant plant) throws IllegalArgumentException {
         Vector2D position = plant.getPosition();
         // Place plant on a field only if there is no other element occupying this field
-        if (mapPlants.get(position) != null || mapAnimals.get(position) != null) {
+        if (!isEmptyField(position)) {
             String message = "Cannot place plant on field: " + position + ". Field is not empty.";
             throw new IllegalArgumentException(message);
         }
@@ -220,10 +304,14 @@ public abstract class AbstractMap implements IMap, IObserver {
         }
     }
 
+    private List<Animal> getAllAnimals() {
+        List<Animal> result = new ArrayList<>();
+        for (Set<Animal> animals: mapAnimals.values()) result.addAll(animals);
+        return result;
+    }
+
     private void updateAnimals() {
-        for (SortedSet<Animal> animals: mapAnimals.values()) {
-            for (Animal animal: animals) animal.update();
-        }
+        for (Animal animal: getAllAnimals()) animal.update();
     }
 
     private void feedAnimals() {
@@ -233,9 +321,14 @@ public abstract class AbstractMap implements IMap, IObserver {
             List<Animal> animals = getAnimalsWithMaxEnergy(plant.getPosition(), 1);
             // Divide the plant's energy into equal parts for
             // each selected animal
-            int energyPart = plant.getEnergy() / animals.size();
-            // Loop over all selected animals and feed them
-            for (Animal animal: animals) animal.feed(energyPart);
+            try {
+                int energyPart = plant.getEnergy() / animals.size();
+                // Loop over all selected animals and feed them
+                for (Animal animal: animals) animal.feed(energyPart);
+            } catch (ArithmeticException e) {
+                System.out.println(">>> all animals at field: " + mapAnimals.get(plant.getPosition()));
+                e.printStackTrace();
+            }
             plant.remove();
         }
         eatenPlants.clear();
@@ -284,9 +377,8 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     public boolean isEmptyField(Vector2D position) {
-        return mapAnimals.get(position) == null
-                || mapAnimals.get(position).size() == 0
-                || mapPlants.get(position) == null;
+        return (mapAnimals.get(position) == null || mapAnimals.get(position).size() == 0)
+                && mapPlants.get(position) == null;
     }
 
     private void spawnSinglePlant(MapArea area) {
@@ -294,7 +386,6 @@ public abstract class AbstractMap implements IMap, IObserver {
             case JUNGLE -> getJungleEmptyFieldVector();
             case STEPPE -> getSteppeEmptyFieldVector();
         };
-        System.out.println("Attempting to spawn plant at: " + position);
         // Do not spawn a grass object if there is no more space available
         if (position == null) return;
         // Create a plant object and add it to the map
@@ -302,9 +393,7 @@ public abstract class AbstractMap implements IMap, IObserver {
             case JUNGLE -> new Bush(this, position, bushEnergy);
             case STEPPE -> new Grass(this, position, grassEnergy);
         };
-        System.out.println("Created new plant: " + plant);
         plant.add();
-        System.out.println("Notified plant observer\n");
     }
 
     private Vector2D getJungleEmptyFieldVector() {
@@ -335,6 +424,8 @@ public abstract class AbstractMap implements IMap, IObserver {
             if (count > 0) initialPosition = segmentLowerLeft;
             else initialPosition = Vector2D.randomVector(segmentLowerLeft.getX(), segmentUpperRight.getX(),
                                                          segmentLowerLeft.getY(), segmentUpperRight.getY());
+            // Continue if the area is a jungle (for example, when there is no segment with
+            // specified segmentIdx, because a jungle occupies a whole (or almost whole) map)
             position = getSegmentEmptyFieldVector(initialPosition, segmentLowerLeft, segmentUpperRight);
             segmentIdx = (segmentIdx + 1) % segmentsCount;
         }
@@ -343,28 +434,28 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private Vector2D getSegmentLowerLeft(int segmentIdx) throws IllegalArgumentException {
         return switch (segmentIdx) {
-            case 0 -> new Vector2D(mapLowerLeft.getX(), jungleUpperRight.getY());
-            case 1 -> jungleLowerleft.upperLeft(jungleUpperRight);
-            case 2 -> jungleUpperRight;
-            case 3 -> new Vector2D(mapLowerLeft.getX(), jungleLowerleft.getY());
-            case 4 -> jungleLowerleft.lowerRight(jungleUpperRight);
+            case 0 -> mapLowerLeft.upperLeft(jungleUpperRight).add(new Vector2D(0, 1));
+            case 1 -> jungleLowerleft.upperLeft(jungleUpperRight).add(new Vector2D(0, 1));
+            case 2 -> jungleUpperRight.add(new Vector2D(1, 1));
+            case 3 -> mapLowerLeft.upperLeft(jungleLowerleft);
+            case 4 -> jungleLowerleft.lowerRight(jungleUpperRight).add(new Vector2D(1, 0));
             case 5 -> mapLowerLeft;
-            case 6 -> new Vector2D(jungleLowerleft.getX(), mapLowerLeft.getY());
-            case 7 -> mapLowerLeft.lowerRight(mapUpperRight);
+            case 6 -> mapLowerLeft.lowerRight(jungleLowerleft);
+            case 7 -> mapLowerLeft.lowerRight(jungleUpperRight).add(new Vector2D(1, 0));
             default -> throw new IllegalArgumentException(segmentIdx + " is not valid segment index");
         };
     }
 
     private Vector2D getSegmentUpperRight(int segmentIdx) throws IllegalArgumentException {
         return switch (segmentIdx) {
-            case 0 -> new Vector2D(jungleLowerleft.getX(), mapUpperRight.getY());
-            case 1 -> new Vector2D(jungleUpperRight.getX(), mapUpperRight.getY());
+            case 0 -> jungleLowerleft.upperLeft(mapUpperRight).subtract(new Vector2D(1, 0));
+            case 1 -> jungleUpperRight.upperLeft(mapUpperRight);
             case 2 -> mapUpperRight;
-            case 3 -> jungleLowerleft.upperLeft(jungleUpperRight);
-            case 4 -> new Vector2D(mapUpperRight.getX(), jungleUpperRight.getY());
-            case 5 -> jungleLowerleft;
-            case 6 -> new Vector2D(jungleLowerleft.getX(), mapLowerLeft.getY());
-            case 7 -> new Vector2D(mapUpperRight.getX(), jungleLowerleft.getY());
+            case 3 -> jungleLowerleft.upperLeft(jungleUpperRight).subtract(new Vector2D(1, 0));
+            case 4 -> jungleUpperRight.lowerRight(mapUpperRight);
+            case 5 -> jungleLowerleft.subtract(new Vector2D(1, 1));
+            case 6 -> jungleUpperRight.lowerRight(jungleLowerleft).subtract(new Vector2D(0, 1));
+            case 7 -> jungleLowerleft.lowerRight(mapUpperRight).subtract(new Vector2D(0, 1));
             default -> throw new IllegalArgumentException(segmentIdx + " is not valid segment index");
         };
     }
@@ -377,12 +468,17 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Calculate segment dimensions
         int segmentWidth = maxX - minX + 1;
         int segmentHeight = maxY - minY + 1;
+        // Return null is a segment doesn't exist
+        if (segmentHeight == 0 || segmentWidth == 0) return null;
         int i = position.getX() * segmentHeight + position.getY();
+        int count = 0;
         int segmentFieldsCount = segmentWidth * segmentHeight;
         // Loop over subsequent fields till a field is not empty
         while (!isEmptyField(position)) {
             i = (i + 1) % segmentFieldsCount;
-            position = lowerLeft.add(new Vector2D(i / segmentHeight, i % segmentWidth));
+            position = lowerLeft.add(new Vector2D(i / segmentHeight, i % segmentHeight));
+            // Return null if cannot find an empty field in a segment
+            if (count++ == segmentFieldsCount) return null;
         }
         return position;
     }

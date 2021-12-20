@@ -8,7 +8,9 @@ import my.project.simulation.maps.FencedMap;
 import my.project.simulation.maps.FoldingMap;
 import my.project.simulation.maps.IMap;
 
-public class SimulationsContainerController {
+public class SimulationsController {
+    private final IEngine engine = new SimulationEngine(this);
+
     @FXML
     private ScrollPane simulationBoxLeft;
 
@@ -17,15 +19,19 @@ public class SimulationsContainerController {
 
     @FXML
     private void initialize() {
-        // TODO - move this code to the better place (and add a possibility to specify input data)
-        IEngine engine = new SimulationEngine();
+        // TODO - pass data from input
+        Thread engineThread = new Thread((Runnable) engine);
 
-        IMap foldingMap = new FoldingMap(4, 6, .45, 10, 1, 1, 1, 3);
+        IMap foldingMap = new FoldingMap(10, 10, .2, 2000, 1, 1, 1, 100);
         engine.addData(foldingMap, simulationBoxLeft);
 
-//        IMap fencedMap = new FencedMap(10, 10, .4, 10, 1, 1, 1, 3);
-//        engine.addData(fencedMap, simulationBoxRight);
+        IMap fencedMap = new FencedMap(10, 10, .4, 1000, 3, 5, 3, 100);
+        engine.addData(fencedMap, simulationBoxRight);
 
-        engine.run();
+        engineThread.start();
+    }
+
+    public void requestNewFrame() {
+        engine.renderNewFrame();
     }
 }

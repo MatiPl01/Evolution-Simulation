@@ -93,9 +93,8 @@ public class PrefixTree<K, V> { // inserted data must be a list
             if (nextNode == null) {
                 nextNode = new TreeNode<>(branchesCount, key, currNode);
                 currNode.setBranch(idx, nextNode);
-            } else {
-                nextNode.incrementCount();
             }
+            nextNode.incrementCount();
             currNode = nextNode;
         }
 
@@ -113,21 +112,37 @@ public class PrefixTree<K, V> { // inserted data must be a list
         }
     }
 
-    public void remove(List<K> keys) throws NoSuchElementException {
+    public boolean hasKey(List<K> keys) {
         TreeNode<K, V> currNode = root;
+
+        for (K key: keys) {
+            int idx = getIndex(key);
+            currNode = currNode.getBranches().get(idx);
+            if (currNode == null) return false;
+        }
+        return true;
+    }
+
+    public void remove(List<K> keys) throws NoSuchElementException {
+        System.out.println(">>>>> REMOVING GENOTYPE: " + keys);
+        TreeNode<K, V> currNode = root;
+
+        int delme = 1;
+
+        if (!hasKey(keys)) throw new NoSuchElementException("Keys: " + keys + " were not found in the PrefixTree");
+
         for (K key: keys) {
             int idx = getIndex(key);
 
+            System.out.println("Step " + delme++ + " key: " + key + " branches: " + currNode.getBranches());
+
             TreeNode<K, V> nextNode = currNode.getBranches().get(idx);
-            if (nextNode == null) {
-                throw new NoSuchElementException("Keys: " + keys + " were not found in the PrefixTree");
-            } else {
-                nextNode.decrementCount();
-                // Remove a subtree if the next node is the last node (counter dropped to 0)
-                if (nextNode.getCount() == 0) {
-                    currNode.setBranch(idx, null);
-                    return;
-                }
+            nextNode.decrementCount();
+            // Remove a subtree if the next node is the last node (counter dropped to 0)
+            if (nextNode.getCount() == 0) {
+                System.out.println("    -------->  CUTTING OFF PART OF A TREE");
+                currNode.setBranch(idx, null);
+                return;
             }
             currNode = nextNode;
         }
@@ -153,7 +168,7 @@ public class PrefixTree<K, V> { // inserted data must be a list
         return result;
     }
 
-    public List<K> getLeafKeys(TreeNode<K, V> node) {
+    private List<K> getLeafKeys(TreeNode<K, V> node) {
         TreeNode<K, V> currNode = node;
         List<K> result = new ArrayList<>();
 

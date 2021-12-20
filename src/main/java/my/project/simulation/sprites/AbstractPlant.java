@@ -13,7 +13,6 @@ public abstract class AbstractPlant extends AbstractSprite {
         this.energy = energy;
         this.IMG_PATH = getRandomImagePath();
         addObserver(new GuiPlantSprite(this));
-        System.out.println("Added plant Gui observer");
     }
 
     @Override

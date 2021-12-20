@@ -1,6 +1,8 @@
 package my.project.gui.simulation.visualization;
 
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.AnchorPane;
 import my.project.simulation.maps.IMap;
 
 public class SimulationVisualizer implements IVisualizer {
