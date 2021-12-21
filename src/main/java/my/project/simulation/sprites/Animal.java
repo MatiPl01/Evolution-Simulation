@@ -1,6 +1,7 @@
 package my.project.simulation.sprites;
 
 import my.project.gui.simulation.sprites.GuiAnimalSprite;
+import my.project.simulation.utils.AnimalTracker;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.enums.MapDirection;
@@ -18,18 +19,18 @@ public class Animal extends AbstractSprite {
     private static final double BREED_ENERGY_LOSS_RATIO = .25;
     private final String IMG_PATH = "src/main/resources/images/animals/leopard.png";
 
-    private Vector2D prevPosition;
-    private MapDirection direction;
     private final int[] genome;
     private final int[] genesCounts;
+
+    private Vector2D prevPosition;
+    private MapDirection direction;
     private int energy;
     private int daysAlive = 0;
-    private final List<Animal> children = new ArrayList<>();
+    private int childrenCount = 0;
+    private AnimalTracker tracker;
     // ID is a unique number referring to the animal
     // (this number also indicates in which order animals appeared on a map)
     private final long ID;
-
-    private final List<Vector2D> posHist = new ArrayList<>(); // TODO - REMOVE ME
 
     public Animal(IMap map, Vector2D initialPosition) {
         super(map, initialPosition);
@@ -37,12 +38,9 @@ public class Animal extends AbstractSprite {
         this.prevPosition = initialPosition;
         this.genome = generateRandomGenome();
         this.energy = map.getStartEnergy();
-//        System.out.println(">>> ANIMAL ENERGY " + energy);
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
         addObserver(new GuiAnimalSprite(this));
-
-        posHist.add(initialPosition); // TODO - REMOVE ME
     }
 
     public Animal(IMap map, Vector2D initialPosition, int energy, int[] genome) {
@@ -54,20 +52,18 @@ public class Animal extends AbstractSprite {
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
         addObserver(new GuiAnimalSprite(this));
-
-        posHist.add(initialPosition); // TODO - REMOVE ME
     }
 
     @Override
     public String toString() {
-        return switch(direction) {
-            case NORTH     -> "N";
+        return switch (direction) {
+            case NORTH -> "N";
             case NORTHEAST -> "NE";
-            case EAST      -> "E";
+            case EAST -> "E";
             case SOUTHEAST -> "SE";
-            case SOUTH     -> "S";
+            case SOUTH -> "S";
             case SOUTHWEST -> "SW";
-            case WEST      -> "W";
+            case WEST -> "W";
             case NORTHWEST -> "NW";
         };
     }
@@ -85,22 +81,24 @@ public class Animal extends AbstractSprite {
         return energy;
     }
 
-    public long getID() { return ID; }
+    public long getID() {
+        return ID;
+    }
 
-    public MapDirection getDirection() { return direction; }
+    public MapDirection getDirection() {
+        return direction;
+    }
 
-    public List<Integer> getGenome() { return Arrays.stream(genome).boxed().toList(); }
+    public List<Integer> getGenome() {
+        return Arrays.stream(genome).boxed().toList();
+    }
 
     public int getDaysAlive() {
         return daysAlive;
     }
 
     public int getChildrenCount() {
-        return children.size();
-    }
-
-    public long getDescendantsCount() {
-        return countDescendants(this);
+        return childrenCount;
     }
 
     public static List<Integer> getPossibleGenes() {
@@ -109,20 +107,27 @@ public class Animal extends AbstractSprite {
         return genes;
     }
 
+    public void setTracker(AnimalTracker tracker) {
+        this.tracker = tracker;
+    }
+
+    public void removeTracker() {
+        tracker = null;
+    }
+
     public void update() {
         // Update animal's state only if an animal is alive
         // (only if it has energy greater than 0)
-        if (energy > 0) {
+        if (energy <= 0) {
+            if (tracker != null && tracker.getTrackedAnimal() == this) tracker.recordAnimalDeath();
+            remove();
+        } else {
             int angleNum = chooseRotationAngleNum();
-            MapDirection prevDirection = direction;
-            rotate(angleNum);
-//            System.out.println("Changed animal direction from: " + prevDirection + " to: " + direction);
-            if (canMove(angleNum)) move();
             decreaseEnergy(map.getMoveEnergy());
-            // Otherwise, increment days alive counter
+            rotate(angleNum);
+            if (canMove(angleNum)) move();
             daysAlive++;
-        // Otherwise, remove an animal
-        } else remove();
+        }
     }
 
     public void feed(int deltaEnergy) {
@@ -139,29 +144,17 @@ public class Animal extends AbstractSprite {
         return angleNum == 0 || angleNum == MapDirection.values().length / 2;
     }
 
-    public List<Vector2D> getPosHist() { // TODO - REMOVE ME
-        return posHist;
-    }
-
     public void move() {
         Vector2D moveVector = direction.toUnitVector();
         Vector2D newPosition = map.getNextPosition(position, moveVector);
-//        System.out.println("\nTrying to move animal from: " + position + " to: " + newPosition);
-//        System.out.println("Animal direction: " + direction);
         // Move an animal only if a new position will be different to the current one
         prevPosition = position;
         position = newPosition;
-
-//        System.out.println("Moved animal from: " + prevPosition + " to: " + position);
-        posHist.add(newPosition); // TODO - REMOVE ME
-
         notifyPositionChanged();
-//        System.out.println("Updated animal coordinates: prev: " + prevPosition + ", curr: " + position);
     }
 
     private void notifyPositionChanged() {
-//        System.out.println("Animal observers: " + observers + " count: " + observers.size());
-        for (IObserver observer: observers) observer.changeSpritePosition(this);
+        for (IObserver observer : observers) observer.changeSpritePosition(this);
     }
 
     private int[] calculateGenesCounts(int[] currGenome) {
@@ -222,7 +215,7 @@ public class Animal extends AbstractSprite {
         // Split parents genomes and merge them into a new genome
         int splitIdx = (energy1 * GENES_COUNT) / (energy1 + energy2);
         int[] newGenome = new int[GENES_COUNT];
-        for (int i = 0; i < splitIdx; i++)           newGenome[i] = genome1[i];
+        for (int i = 0; i < splitIdx; i++) newGenome[i] = genome1[i];
         for (int i = splitIdx; i < GENES_COUNT; i++) newGenome[i] = genome2[i];
         return newGenome;
     }
@@ -236,14 +229,11 @@ public class Animal extends AbstractSprite {
     }
 
     public void breed(Animal other) {
-//        System.out.println("TRYING TO BREED");
         // Do not bread if at least one of animals has not enough energy
-//        System.out.println("Energy: " + energy + ", " + other.energy + ", min: " + map.getMinBreedEnergy());
         if (!canBreed() || !other.canBreed()) return;
-//        System.out.println("BREEDING");
         // Calculate the energy lost by parents during reproduction
-        int deltaEnergy1 = (int)(energy * BREED_ENERGY_LOSS_RATIO);
-        int deltaEnergy2 = (int)(other.energy * BREED_ENERGY_LOSS_RATIO);
+        int deltaEnergy1 = (int) (energy * BREED_ENERGY_LOSS_RATIO);
+        int deltaEnergy2 = (int) (other.energy * BREED_ENERGY_LOSS_RATIO);
         // Decrease parents energy
         decreaseEnergy(deltaEnergy1);
         other.decreaseEnergy(deltaEnergy2);
@@ -251,19 +241,23 @@ public class Animal extends AbstractSprite {
         int[] childGenome = mergeGenomes(genome, energy, other.genome, other.energy);
         // Create a new animal with the energy inherited from its parents
         Animal child = new Animal(map, position, deltaEnergy1 + deltaEnergy2, childGenome);
-        // Add a child to children lists of parents
-        children.add(child);
-        other.children.add(child);
+        // Increment a number of parent's children
+        childrenCount++;
+        other.childrenCount++;
         child.add();
-//        System.out.println("Parent1 children: " + children);
-//        System.out.println("Parent2 children: " + other.children);
+        // Handle animal tracking (if at least one of child's parents is tracked)
+        handleTracking(other, child);
     }
 
-    private long countDescendants(Animal animal) {
-        long count = animal.children.size();
-        for (Animal child: animal.children) {
-            count += countDescendants(child);
+    private void handleTracking(Animal other, Animal child) {
+        // Enable child tracking if one of parents is tracked
+        if (tracker != null || other.tracker != null) {
+            child.setTracker(tracker);
+            tracker.addToTrackedList(child);
+            // Increment a number of children of the tracked animal if one
+            // of created animal's parents is tracked
+            Animal trackedAnimal = tracker.getTrackedAnimal();
+            if (trackedAnimal == this || trackedAnimal == other) tracker.incrementChildrenCount();
         }
-        return count;
     }
 }

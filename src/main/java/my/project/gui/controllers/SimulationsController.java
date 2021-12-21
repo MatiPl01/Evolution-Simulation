@@ -21,11 +21,11 @@ public class SimulationsController {
         IEngine engine = new SimulationEngine();
         Thread engineThread = new Thread((Runnable) engine);
 
-        IMap foldingMap = new FoldingMap(10, 10, .4, 10, 1, 5, 3, 4);
+        IMap foldingMap = new FoldingMap(10, 10, .3, 2000, 2, 5, 3, 10);
         engine.addData(foldingMap, simulationBoxLeft);
 
-        IMap fencedMap = new FencedMap(10, 10, .4, 1000, 1, 5, 3, 100);
-        engine.addData(fencedMap, simulationBoxRight);
+//        IMap fencedMap = new FencedMap(25, 25, .4, 5000, 2, 5, 3, 50);
+//        engine.addData(fencedMap, simulationBoxRight);
 
         engineThread.start();
     }

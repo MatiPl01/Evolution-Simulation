@@ -23,8 +23,11 @@ public class SimulationEngine implements IEngine, Runnable {
             while (!initializationDone) sleep(INITIALIZATION_CHECK_INTERVAL);
             while (!finishedAllVisualizations()) {
                 Platform.runLater(this::renderNewFrame);
-                sleep(100); // TODO - make me adjustable in GUI
+                sleep(50); // TODO - make me adjustable in GUI
             }
+            System.out.println("Simulation finished");
+            for (IMap map: visualizers.values()) map.getStatsMeter().generateCSVFile();
+
         } catch (InterruptedException e) {
             System.out.println("Simulation was interrupted");
             e.printStackTrace();

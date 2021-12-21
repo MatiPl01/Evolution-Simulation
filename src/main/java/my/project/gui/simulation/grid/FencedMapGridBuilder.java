@@ -1,5 +1,6 @@
 package my.project.gui.simulation.grid;
 
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;

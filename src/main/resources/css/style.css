@@ -48,3 +48,9 @@
 .scroll-pane > .corner {
     -fx-background-color: black;
 }
+
+.progress-bar .bar {
+    -fx-background-insets: 0;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}

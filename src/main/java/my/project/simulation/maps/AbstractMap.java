@@ -2,14 +2,14 @@ package my.project.simulation.maps;
 
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.data.structures.PrefixTree;
-import my.project.simulation.utils.IObserver;
+import my.project.simulation.stats.StatsMeter;
+import my.project.simulation.utils.*;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.sprites.*;
-import my.project.simulation.utils.EnergyComparator;
 import my.project.simulation.utils.Random;
-import my.project.simulation.utils.Vector2D;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractMap implements IMap, IObserver {
     private static final double MIN_BREED_ENERGY_RATIO = .5;
@@ -30,10 +30,15 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private final int initialAnimalsCount;
 
-    private int animalsCount;
-    private int animalsDiedCount = 0;
-    private int plantsCount = 0;
+    private long dayNum = 0;
+    private long animalsCount;
+    private long diedAnimalsCount = 0;
+    private long plantsCount = 0;
+    private long diedAnimalsSumDaysAlive = 0;
+
     private IBuilder gridBuilder;
+    protected StatsMeter statsMeter;
+    private AnimalTracker animalTracker;
 
     // TODO - add input type checking (on a frontEnd side)
     AbstractMap(int width, int height, double jungleRatio,
@@ -76,7 +81,8 @@ public abstract class AbstractMap implements IMap, IObserver {
         if (sprite instanceof Animal animal) {
 //            System.out.println("\n>>> Calling removeAnimal from removeSprite");
             removeAnimal(animal, animal.getPosition());
-            animalsDiedCount++;
+            diedAnimalsCount++;
+            diedAnimalsSumDaysAlive += animal.getDaysAlive();
             genotypesTree.remove(animal.getGenome());
         }
         // If a sprite is a plant object
@@ -93,13 +99,6 @@ public abstract class AbstractMap implements IMap, IObserver {
             placeAnimal(animal);
             animalsCount++;
             genotypesTree.insert(animal.getGenome(), animal);
-            System.out.println("Dominant genotypes: ");
-            for (List<Integer> genotype: genotypesTree.getMaxCountKeys()) {
-                System.out.println(genotype);
-                System.out.println("\tAnimals having this genotype:");
-                System.out.println("\t" + genotypesTree.getValues(genotype));
-            }
-            System.out.println("\n");
         }
         // If a sprite is a plant object
         else if (sprite instanceof AbstractPlant) {
@@ -126,6 +125,11 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
+    public StatsMeter getStatsMeter() {
+        return statsMeter;
+    }
+
+    @Override
     public void spawnPlants() {
         spawnSinglePlant(MapArea.JUNGLE);
         spawnSinglePlant(MapArea.STEPPE);
@@ -139,16 +143,39 @@ public abstract class AbstractMap implements IMap, IObserver {
     @Override
     public void update() {
         if (areAnimalsAlive()) {
+            dayNum++;
             updateAnimals();
             feedAnimals();
             breedAnimals();
             spawnPlants();
+            updateStatistics();
         }
     }
 
     @Override
     public boolean areAnimalsAlive() {
-        return animalsCount > animalsDiedCount;
+        return getAnimalsAliveCount() > 0;
+    }
+
+    @Override
+    public void setAnimalTracker(AnimalTracker tracker) { // TODO - add a possibility tu setup trackers
+        if (animalTracker != null) animalTracker.remove();
+        animalTracker = tracker;
+        tracker.setStatsMeter(statsMeter);
+    }
+
+    @Override
+    public void removeAnimalTracker() { // TODO - add a possibility to unlink tracker from an animal
+        if (animalTracker != null) {
+            animalTracker.remove();
+            animalTracker = null;
+        }
+        else throw new NoSuchElementException("There is no AnimalTracker set up in a map");
+    }
+
+    @Override
+    public long getCurrentDayNum() {
+        return dayNum;
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -156,14 +183,6 @@ public abstract class AbstractMap implements IMap, IObserver {
             add(mapLowerLeft);
             add(mapUpperRight);
         }};
-    }
-
-    public List<List<Integer>> getDominantGenotypes() {
-        return genotypesTree.getMaxCountKeys();
-    }
-
-    public Set<Animal> getDominantGenotypesAnimals() {
-        return genotypesTree.getMaxCountValues();
     }
 
     public int getMoveEnergy() {
@@ -181,6 +200,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void initialize() {
         randomlyPalceAnimals(initialAnimalsCount);
         spawnPlants();
+        updateStatistics();
     }
 
     private void randomlyPalceAnimals(int animalsCount) {
@@ -199,7 +219,6 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private void placeAnimal(Animal animal) {
         Vector2D position = animal.getPosition();
-//        System.out.println("Placing animal " + animal.getID() + " at " + position);
         // Create the new animals list if there is no animals list on the specified position
         if (mapAnimals.get(position) == null) mapAnimals.put(position, new TreeSet<>(new EnergyComparator()));
         // Add an animal to the list
@@ -207,7 +226,6 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Add eaten plants to the list awaiting update
         AbstractPlant plant = mapPlants.get(position);
         if (plant != null) eatenPlants.add(plant);
-//        System.out.println("ANIMAL PLACED");
     }
 
     private void removeAnimal(Animal animal, Vector2D position) throws NoSuchElementException {
@@ -218,101 +236,23 @@ public abstract class AbstractMap implements IMap, IObserver {
         // we will compare all animals from a set one by one with the animal
         // which will be removed.
         else {
-            Iterator<Animal> it = animals.iterator();
-            while (it.hasNext()) {
-                Animal currentAnimal = it.next();
-                // Remove the current animal if found an animal with the same
-                // id as an animal which we want to remove
-                if (currentAnimal.getID() == animal.getID()) {
-                    it.remove();
-                    return;
+            if (animals != null) {
+                Iterator<Animal> it = animals.iterator();
+                while (it.hasNext()) {
+                    Animal currentAnimal = it.next();
+                    // Remove the current animal if found an animal with the same
+                    // id as an animal which we want to remove
+                    if (currentAnimal.getID() == animal.getID()) {
+                        it.remove();
+                        return;
+                    }
                 }
             }
             // Throw an exception if the desired animal wasn't found
             throw new NoSuchElementException("Sprite " + animal + " is not on the map");
         }
-
-//        System.out.println("In removeAnimal trying to remove with id: " + animal.getID() + " from position " + position);
-//        System.out.println("Animal current position: " + animal.getPosition() + ", Animal previous position: " + animal.getPrevPosition());
-//        System.out.println("Animal current direction: " + animal.getDirection());
-//        System.out.println("All animals at: " + position + ": " + animals.stream().map(Animal::getID).collect(Collectors.toList()));
-//        System.out.println("All animals at: " + animal.getPrevPosition() + ": " + mapAnimals.get(animal.getPrevPosition()).stream().map(Animal::getID).collect(Collectors.toList()));
-//        boolean found = false;
-//        for (Vector2D v: mapAnimals.keySet()) {
-//            for (Animal b: mapAnimals.get(v)) {
-//                if (b.getID() == animal.getID()) {
-//                    found = true;
-//                    System.out.println("Found animal with id: " + animal.getID() + " at: " + v);
-//                }
-//            }
-//        }
-//        if (!found) System.out.println("THERE IS NO ANIMAL WITH id: " + animal.getID() + " ON A MAP (probably deleted before)");
-//        System.out.println("Animal positions history: " + animal.getPosHist());
-//        System.out.println("Is contained? " + animals.contains(animal));
-//
-//        if (animals != null && animals.contains(animal)) animals.remove(animal);
-//        else throw new NoSuchElementException("Sprite " + animal + " is not on the map");
-//        boolean removed = false;
-//        Iterator<Animal> it = animals.iterator();
-//        while (it.hasNext()) {
-//            Animal animal1 = it.next();
-//            if (animal1.getID() == animal.getID()) { it.remove(); removed=true; }
-//        }
-////        else {
-//        if (!removed) {
-//            System.out.println(">>>>>>>>>> ERROR <<<<<<<<<<<");
-//            throw new NoSuchElementException("Sprite " + animal + " is not on the map");
-//        }
-////        }
-
-
-//        Set<Animal> animalsCurrPosition = mapAnimals.get(animal.getPosition());
-//        Set<Animal> animalsPrevPosition = mapAnimals.get(animal.getPrevPosition());
-//
-//        System.out.println("Curr animal: " + animal + " (" + animal.hashCode() + ")");
-//        System.out.println("Previous position: " + animal.getPrevPosition());
-//        System.out.println("Current position: " + animal.getPosition());
-//        System.out.println("All animals: " + mapAnimals);
-//        System.out.println("Received animalsCurrPosition: " + animalsCurrPosition);
-//        if (animalsCurrPosition != null) {
-//            for (Animal a : animalsCurrPosition) {
-//                System.out.println(a.getID() + " the same? " + (a.getID() == animal.getID()));
-//            }
-//            System.out.println("Is in current? " + animalsCurrPosition.contains(animal));
-//        }
-//        System.out.println("Received animalsPrevPosition: " + animalsPrevPosition);
-//        if (animalsPrevPosition != null) {
-//            for (Animal a : animalsPrevPosition) {
-//                System.out.println(a.getID() + " the same? " + (a.getID() == animal.getID()));
-//            }
-//            System.out.println("Is in previous? " + animalsPrevPosition.contains(animal));
-//        }
-//        System.out.println("\n");
-//
-//        if (animalsCurrPosition != null && animalsCurrPosition.contains(animal)) {
-//            animalsCurrPosition.remove(animal);
-//        } else if (animalsPrevPosition != null && animalsPrevPosition.contains(animal)) {
-//            animalsPrevPosition.remove(animal);
-//        } else {
-//            System.out.println("ERROR IS NOW !!!");
-//            if (animalsCurrPosition != null) {
-//                for (Animal currAnimal: animalsCurrPosition) {
-//                    if (currAnimal.getID() == animal.getID()) {
-//                        animalsCurrPosition.remove(currAnimal);
-//                        return;
-//                    }
-//                }
-//            }
-//            if (animalsPrevPosition != null) {
-//                for (Animal currAnimal: animalsPrevPosition) {
-//                    if (currAnimal.getID() == animal.getID()) {
-//                        animalsPrevPosition.remove(currAnimal);
-//                        return;
-//                    }
-//                }
-//            }
-//            throw new NoSuchElementException("Sprite " + animal + " is not on the map");
-//        }
+        // Remove the whole set if there are no more animals
+        if (animals.size() == 0) mapAnimals.remove(position);
     }
 
     private void placePlant(AbstractPlant plant) throws IllegalArgumentException {
@@ -340,6 +280,16 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private void updateAnimals() {
         for (Animal animal: getAllAnimals()) animal.update();
+        // Bring to top animals having the greatest energy from all animals
+        // stacked at the same field
+        for (SortedSet<Animal> animals: mapAnimals.values()) {
+            Iterator<Animal> it = animals.iterator();
+            // Get the first animal of the SortedSet (it will be an animal
+            // with the greatest energy value)
+            Animal animal = it.next();
+            it.remove();
+            placeAnimal(animal);
+        }
     }
 
     private void feedAnimals() {
@@ -354,7 +304,6 @@ public abstract class AbstractMap implements IMap, IObserver {
                 // Loop over all selected animals and feed them
                 for (Animal animal: animals) animal.feed(energyPart);
             } catch (ArithmeticException e) {
-//                System.out.println(">>> all animals at field: " + mapAnimals.get(plant.getPosition()));
                 e.printStackTrace();
             }
             plant.remove();
@@ -378,7 +327,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     private List<Animal> getAnimalsWithMaxEnergy(Vector2D position, int firstMaxValuesCount) {
         List<Animal> result = new ArrayList<>();
         Set<Animal> animals = mapAnimals.get(position);
-        int maxEnergy = 0;
+        int maxEnergy = -moveEnergy;
         int count = 1;
         // Animals are sorted in a non-increasing order, so a loop
         // below will always take the first animal (the one with the
@@ -422,7 +371,6 @@ public abstract class AbstractMap implements IMap, IObserver {
             case STEPPE -> new Grass(this, position, grassEnergy);
         };
         plant.add();
-//        System.out.println("ADDED PLANT");
     }
 
     private Vector2D getJungleEmptyFieldVector() {
@@ -508,5 +456,44 @@ public abstract class AbstractMap implements IMap, IObserver {
             if (count++ == segmentFieldsCount) return null;
         }
         return position;
+    }
+
+    private List<List<Integer>> getDominantGenotypes() {
+        return genotypesTree.getMaxCountKeys();
+    }
+
+    private long getAnimalsAliveCount() {
+        return animalsCount - diedAnimalsCount;
+    }
+
+    private double calcAverageAliveEnergy() {
+        long energySum = 0;
+        for (Set<Animal> animals: mapAnimals.values()) {
+            for (Animal animal: animals) energySum += animal.getEnergy();
+        }
+        return energySum > 0 ? 1. * energySum / getAnimalsAliveCount() : 0;
+    }
+
+    private double calcAverageAliveChildrenCount() {
+        long childrenSum = 0;
+        for (Set<Animal> animals: mapAnimals.values()) {
+            for (Animal animal: animals) childrenSum += animal.getChildrenCount();
+        }
+        return childrenSum > 0 ? 1. * childrenSum / getAnimalsAliveCount() : 0;
+    }
+
+    private double calcAverageDiedAnimalsLifespan() {
+        if (diedAnimalsCount == 0) return 0; // 0 means there are no animals died
+        return 1. * diedAnimalsSumDaysAlive / diedAnimalsCount;
+    }
+
+    private void updateStatistics() {
+        statsMeter.updateStatistics(getAnimalsAliveCount(),
+                                    diedAnimalsCount,
+                                    plantsCount,
+                                    getDominantGenotypes(),
+                                    calcAverageAliveEnergy(),
+                                    calcAverageDiedAnimalsLifespan(),
+                                    calcAverageAliveChildrenCount());
     }
 }
