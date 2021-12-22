@@ -16,6 +16,6 @@ public class GuiPlantSprite extends AbstractGuiSprite {
     @Override
     public void initialize() {
         super.initialize();
-        vBox.setAlignment(Pos.BOTTOM_CENTER);
+        mainBox.setAlignment(Pos.BOTTOM_CENTER);
     }
 }

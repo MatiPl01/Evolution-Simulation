@@ -1,18 +1,21 @@
 package my.project.simulation.maps;
 
 import my.project.gui.simulation.grid.IBuilder;
-import my.project.simulation.data.structures.PrefixTree;
+import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
 import my.project.simulation.utils.*;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.sprites.*;
 import my.project.simulation.utils.Random;
+import my.project.simulation.datastructures.PrefixTree;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class AbstractMap implements IMap, IObserver {
     private static final double MIN_BREED_ENERGY_RATIO = .5;
+    private static final int MAGIC_STRATEGY_RESPAWN_THRESHOLD = 5;
+    private static final int MAX_MAGIC_RESPAWNS_COUNT = 3;
+
     private final int moveEnergy;
     private final int startEnergy;
     private final int bushEnergy;
@@ -22,13 +25,16 @@ public abstract class AbstractMap implements IMap, IObserver {
     protected final Vector2D mapUpperRight;
     protected final Vector2D jungleLowerleft;
     protected final Vector2D jungleUpperRight;
+    protected final int fieldsCount;
 
     protected final Map<Vector2D, SortedSet<Animal>> mapAnimals = new HashMap<>();
     protected final Map<Vector2D, AbstractPlant> mapPlants = new HashMap<>();
     protected final Set<AbstractPlant> eatenPlants = new HashSet<>();
-    protected final PrefixTree<Integer, Animal> genotypesTree = new PrefixTree<>(Animal.getPossibleGenes());
+    protected final PrefixTree<Integer, Animal> genomesTree = new PrefixTree<>(Animal.getPossibleGenes());
 
     private final int initialAnimalsCount;
+    private MapStrategy strategy = MapStrategy.NORMAL; // Default strategy is normal
+    private int magicRespawnsCount = 0;
 
     private long dayNum = 0;
     private long animalsCount;
@@ -54,13 +60,17 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Calculate map upper-right bound vector
         this.mapUpperRight = new Vector2D(width - 1, height - 1);
 
-        // Calculate jungle bounding vectors
+        // Calculate jungle bounding vectors and a number of fields
         int jungleWidth = (int)Math.round(width * jungleRatio);
         if (jungleWidth % 2 != width % 2) jungleWidth += 1;
         int jungleHeight = (int)Math.round(height * jungleRatio);
         if (jungleHeight % 2 != height % 2) jungleHeight += 1;
         this.jungleLowerleft = new Vector2D((width - jungleWidth) / 2, (height - jungleHeight) / 2);
         this.jungleUpperRight = this.jungleLowerleft.add(new Vector2D(jungleWidth - 1, jungleHeight - 1));
+
+        // Calculate a total number of map fields
+        this.fieldsCount = (mapUpperRight.getX() - mapLowerLeft.getX() + 1)
+                         * (mapUpperRight.getY() - mapLowerLeft.getY()) + 1;
     }
 
     @Override
@@ -79,17 +89,22 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void removeSprite(ISprite sprite) throws NoSuchElementException {
         // If a sprite is an animal object
         if (sprite instanceof Animal animal) {
-//            System.out.println("\n>>> Calling removeAnimal from removeSprite");
             removeAnimal(animal, animal.getPosition());
             diedAnimalsCount++;
             diedAnimalsSumDaysAlive += animal.getDaysAlive();
-            genotypesTree.remove(animal.getGenome());
+            genomesTree.remove(animal.getGenome(), animal);
+            // If a strategy is set to magic
+            if (strategy == MapStrategy.MAGIC &&
+                    animalsCount - diedAnimalsCount == MAGIC_STRATEGY_RESPAWN_THRESHOLD &&
+                    magicRespawnsCount++ < MAX_MAGIC_RESPAWNS_COUNT) {
+                handleMagicRespawn();
+            }
         }
         // If a sprite is a plant object
         else if (sprite instanceof AbstractPlant) {
             removePlant((AbstractPlant) sprite);
             plantsCount--;
-        }
+        };
     }
 
     @Override
@@ -98,7 +113,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         if (sprite instanceof Animal animal) {
             placeAnimal(animal);
             animalsCount++;
-            genotypesTree.insert(animal.getGenome(), animal);
+            genomesTree.add(animal.getGenome(), animal);
         }
         // If a sprite is a plant object
         else if (sprite instanceof AbstractPlant) {
@@ -141,6 +156,11 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
+    public void setStrategy(MapStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    @Override
     public void update() {
         if (areAnimalsAlive()) {
             dayNum++;
@@ -149,6 +169,7 @@ public abstract class AbstractMap implements IMap, IObserver {
             breedAnimals();
             spawnPlants();
             updateStatistics();
+            System.out.println("Day num: " + dayNum + ", animals alive: " + getAnimalsAliveCount() +", died animals: " + diedAnimalsCount);
         }
     }
 
@@ -176,6 +197,38 @@ public abstract class AbstractMap implements IMap, IObserver {
     @Override
     public long getCurrentDayNum() {
         return dayNum;
+    }
+
+    @Override
+    public Set<List<Integer>> getDominantGenomes() {
+        return genomesTree.getMaxCountKeys();
+    }
+
+    @Override
+    public Set<Animal> getAnimalsWithGenome(List<Integer> genome) {
+        return genomesTree.getValues(genome);
+    }
+
+    @Override
+    public Set<Animal> getDominantGenomesAnimals() {
+        return genomesTree.getMaxCountValues();
+    }
+
+    @Override
+    public Set<Animal> getAllAnimals() {
+        // Get animals sorted in a non-decreasing order
+        Set<Animal> result = new TreeSet<>(new MinEnergyComparator());
+        for (Set<Animal> animals: mapAnimals.values()) result.addAll(animals);
+        return result;
+    }
+
+    @Override
+    public Set<Animal> getMaxFieldEnergyAnimals() {
+        Set<Animal> animals = new HashSet<>();
+        for (SortedSet<Animal> currAnimals: mapAnimals.values()) {
+            animals.add(currAnimals.first());
+        }
+        return animals;
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -211,7 +264,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
         for (int i = 0; i < animalsCount; i++) {
             Vector2D randomPosition = Vector2D.randomVector(minX, maxX, minY, maxY);
-            Vector2D position = getSegmentEmptyFieldVector(randomPosition, mapLowerLeft, mapUpperRight);
+            Vector2D position = getSegmentEmptyFieldVector(randomPosition, mapLowerLeft, mapUpperRight, true);
             Animal animal = new Animal(this, position);
             animal.add();
         }
@@ -220,7 +273,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     private void placeAnimal(Animal animal) {
         Vector2D position = animal.getPosition();
         // Create the new animals list if there is no animals list on the specified position
-        if (mapAnimals.get(position) == null) mapAnimals.put(position, new TreeSet<>(new EnergyComparator()));
+        if (mapAnimals.get(position) == null) mapAnimals.put(position, new TreeSet<>(new MaxEnergyComparator()));
         // Add an animal to the list
         mapAnimals.get(position).add(animal);
         // Add eaten plants to the list awaiting update
@@ -258,7 +311,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     private void placePlant(AbstractPlant plant) throws IllegalArgumentException {
         Vector2D position = plant.getPosition();
         // Place plant on a field only if there is no other element occupying this field
-        if (!isEmptyField(position)) {
+        if (!isEmptyField(position, false)) {
             String message = "Cannot place plant on field: " + position + ". Field is not empty.";
             throw new IllegalArgumentException(message);
         }
@@ -272,24 +325,13 @@ public abstract class AbstractMap implements IMap, IObserver {
         }
     }
 
-    private List<Animal> getAllAnimals() {
-        List<Animal> result = new ArrayList<>();
-        for (Set<Animal> animals: mapAnimals.values()) result.addAll(animals);
-        return result;
-    }
-
     private void updateAnimals() {
+        // Get a set of animals sorted in a non-decreasing order to ensure
+        // that animals with the greatest energy value will be updated at the
+        // end. This guarantees that when there is more than one animal at
+        // a particular field, the on with the greatest energy will be displayed
+        // at the top.
         for (Animal animal: getAllAnimals()) animal.update();
-        // Bring to top animals having the greatest energy from all animals
-        // stacked at the same field
-        for (SortedSet<Animal> animals: mapAnimals.values()) {
-            Iterator<Animal> it = animals.iterator();
-            // Get the first animal of the SortedSet (it will be an animal
-            // with the greatest energy value)
-            Animal animal = it.next();
-            it.remove();
-            placeAnimal(animal);
-        }
     }
 
     private void feedAnimals() {
@@ -313,7 +355,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private void breedAnimals() {
         for (Vector2D position: mapAnimals.keySet()) {
-            SortedSet<Animal> animals = mapAnimals.get(position);
+            Set<Animal> animals = mapAnimals.get(position);
             // Continue if there are not enough animals to breed on one field
             if (animals.size() < 2) continue;
             // Otherwise, find 2 animals with the greatest energy value
@@ -353,15 +395,15 @@ public abstract class AbstractMap implements IMap, IObserver {
         return null;
     }
 
-    public boolean isEmptyField(Vector2D position) {
+    public boolean isEmptyField(Vector2D position, boolean allowPlants) {
         return (mapAnimals.get(position) == null || mapAnimals.get(position).size() == 0)
-                && mapPlants.get(position) == null;
+                && (allowPlants || mapPlants.get(position) == null);
     }
 
     private void spawnSinglePlant(MapArea area) {
         Vector2D position = switch (area) {
-            case JUNGLE -> getJungleEmptyFieldVector();
-            case STEPPE -> getSteppeEmptyFieldVector();
+            case JUNGLE -> getJungleEmptyFieldVector(false);
+            case STEPPE -> getSteppeEmptyFieldVector(false);
         };
         // Do not spawn a grass object if there is no more space available
         if (position == null) return;
@@ -373,13 +415,13 @@ public abstract class AbstractMap implements IMap, IObserver {
         plant.add();
     }
 
-    private Vector2D getJungleEmptyFieldVector() {
+    private Vector2D getJungleEmptyFieldVector(boolean allowPlants) {
         Vector2D initialPosition = Vector2D.randomVector(jungleLowerleft.getX(), jungleUpperRight.getX(),
                                                          jungleLowerleft.getY(), jungleUpperRight.getY());
-        return getSegmentEmptyFieldVector(initialPosition, jungleLowerleft, jungleUpperRight);
+        return getSegmentEmptyFieldVector(initialPosition, jungleLowerleft, jungleUpperRight, allowPlants);
     }
 
-    private Vector2D getSteppeEmptyFieldVector() {
+    private Vector2D getSteppeEmptyFieldVector(boolean allowPlants) {
         /*
         *  +---+---+---+
         *  | 0 | 1 | 2 |
@@ -401,7 +443,7 @@ public abstract class AbstractMap implements IMap, IObserver {
                                                              segmentLowerLeft.getY(), segmentUpperRight.getY());
             // Continue if the area is a jungle (for example, when there is no segment with
             // specified segmentIdx, because a jungle occupies a whole (or almost whole) map)
-            position = getSegmentEmptyFieldVector(initialPosition, segmentLowerLeft, segmentUpperRight);
+            position = getSegmentEmptyFieldVector(initialPosition, segmentLowerLeft, segmentUpperRight, allowPlants);
             segmentIdx = (segmentIdx + 1) % segmentsCount;
         }
         return position;
@@ -435,7 +477,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         };
     }
 
-    private Vector2D getSegmentEmptyFieldVector(Vector2D position, Vector2D lowerLeft, Vector2D upperRight) {
+    private Vector2D getSegmentEmptyFieldVector(Vector2D position, Vector2D lowerLeft, Vector2D upperRight, boolean allowPlants) {
         int minX = lowerLeft.getX();
         int maxX = upperRight.getX();
         int minY = lowerLeft.getY();
@@ -449,17 +491,13 @@ public abstract class AbstractMap implements IMap, IObserver {
         int count = 0;
         int segmentFieldsCount = segmentWidth * segmentHeight;
         // Loop over subsequent fields till a field is not empty
-        while (!isEmptyField(position)) {
+        while (!isEmptyField(position, allowPlants)) {
             i = (i + 1) % segmentFieldsCount;
             position = lowerLeft.add(new Vector2D(i / segmentHeight, i % segmentHeight));
             // Return null if cannot find an empty field in a segment
             if (count++ == segmentFieldsCount) return null;
         }
         return position;
-    }
-
-    private List<List<Integer>> getDominantGenotypes() {
-        return genotypesTree.getMaxCountKeys();
     }
 
     private long getAnimalsAliveCount() {
@@ -491,9 +529,26 @@ public abstract class AbstractMap implements IMap, IObserver {
         statsMeter.updateStatistics(getAnimalsAliveCount(),
                                     diedAnimalsCount,
                                     plantsCount,
-                                    getDominantGenotypes(),
+                                    getDominantGenomes(),
                                     calcAverageAliveEnergy(),
                                     calcAverageDiedAnimalsLifespan(),
                                     calcAverageAliveChildrenCount());
+    }
+
+    private void handleMagicRespawn() { // TODO - add some information in gui that the magic respawn is performed
+        System.out.println("MAGIC RESPAWN HAPPENS NOW");
+        // Spawn remaining animals copies if magic strategy was chosen
+        int animalsAliveCount = (int)(animalsCount - diedAnimalsCount);
+        int remainingEmptyFields = fieldsCount - animalsAliveCount;
+        Set<Animal> animalsAlive = getAllAnimals();
+        Iterator<Animal> animalsIt = animalsAlive.iterator();
+        int i = 0;
+        while (i < remainingEmptyFields && animalsIt.hasNext()) {
+            Animal currAnimal = animalsIt.next();
+            Vector2D position = Vector2D.randomVector(mapLowerLeft.getX(), mapUpperRight.getX(),
+                                                      mapLowerLeft.getY(), mapUpperRight.getY());
+            position = getSegmentEmptyFieldVector(position, mapLowerLeft, mapUpperRight, true);
+            (new Animal(this, position, startEnergy, currAnimal.getGenome())).add();
+        }
     }
 }

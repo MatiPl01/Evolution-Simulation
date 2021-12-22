@@ -11,11 +11,25 @@
     -fx-background-insets: -1px;
 }
 
-.cellLabel {
+.cellNumber {
     -fx-border-width: 1px;
     -fx-background-color: #492a0d;
     -fx-border-color: #391d07;
+}
+
+.animalIDBox {
+    -fx-border-width: 2px;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-background-color: #333;
+    -fx-border-color: #000;
+    -fx-background-insets: 1px;
+}
+
+.animalIDBox Label {
     -fx-text-fill: #fff;
+    -fx-font-family: Lato;
+    -fx-font-weight: bold;
 }
 
 .scroll-pane {

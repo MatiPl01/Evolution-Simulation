@@ -1,6 +1,8 @@
 package my.project.simulation.sprites;
 
+import my.project.gui.simulation.grid.AbstractGridBuilder;
 import my.project.gui.simulation.sprites.GuiAnimalSprite;
+import my.project.gui.simulation.sprites.IGuiSprite;
 import my.project.simulation.utils.AnimalTracker;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.maps.IMap;
@@ -9,7 +11,7 @@ import my.project.simulation.utils.Random;
 import my.project.simulation.utils.Vector2D;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Animal extends AbstractSprite {
@@ -19,8 +21,8 @@ public class Animal extends AbstractSprite {
     private static final double BREED_ENERGY_LOSS_RATIO = .25;
     private final String IMG_PATH = "src/main/resources/images/animals/leopard.png";
 
-    private final int[] genome;
-    private final int[] genesCounts;
+    private final List<Integer> genome;
+    private final List<Integer> genesCounts;
 
     private Vector2D prevPosition;
     private MapDirection direction;
@@ -40,10 +42,10 @@ public class Animal extends AbstractSprite {
         this.energy = map.getStartEnergy();
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
-        addObserver(new GuiAnimalSprite(this));
+        addGuiObserver();
     }
 
-    public Animal(IMap map, Vector2D initialPosition, int energy, int[] genome) {
+    public Animal(IMap map, Vector2D initialPosition, int energy, List<Integer> genome) {
         super(map, initialPosition);
         this.ID = map.getNewAnimalID();
         this.genome = genome;
@@ -51,7 +53,18 @@ public class Animal extends AbstractSprite {
         this.prevPosition = initialPosition;
         this.direction = generateRandomDirection();
         this.genesCounts = calculateGenesCounts(genome);
-        addObserver(new GuiAnimalSprite(this));
+        addGuiObserver();
+    }
+
+    private void addGuiObserver() {
+        IGuiSprite guiSprite = new GuiAnimalSprite(this);
+        setGuiSprite(guiSprite);
+        addObserver((IObserver) guiSprite);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return ID == ((Animal) other).ID;
     }
 
     @Override
@@ -90,7 +103,7 @@ public class Animal extends AbstractSprite {
     }
 
     public List<Integer> getGenome() {
-        return Arrays.stream(genome).boxed().toList();
+        return genome;
     }
 
     public int getDaysAlive() {
@@ -121,6 +134,7 @@ public class Animal extends AbstractSprite {
         if (energy <= 0) {
             if (tracker != null && tracker.getTrackedAnimal() == this) tracker.recordAnimalDeath();
             remove();
+            System.out.println("Removed animal: ID: " + ID + ", position: " + position + ", prev position: " + prevPosition + ", days alive: " + daysAlive +", energy: " + energy +", guiSprite: " + getGuiSprite() + ", guiSprite still visible?: " + ((AbstractGridBuilder)map.getGridBuilder()).gridPane.getChildren().contains(getGuiSprite().getNode()) + ", is contained in mapAnimals?: " + map.getAllAnimals().contains(this));
         } else {
             int angleNum = chooseRotationAngleNum();
             decreaseEnergy(map.getMoveEnergy());
@@ -157,16 +171,16 @@ public class Animal extends AbstractSprite {
         for (IObserver observer : observers) observer.changeSpritePosition(this);
     }
 
-    private int[] calculateGenesCounts(int[] currGenome) {
+    private List<Integer> calculateGenesCounts(List<Integer> currGenome) {
         // counts[i] - total number of occurrences of digits that are
         //             not greater than i
-        int[] counts = new int[MAX_GENE_NUM - MIN_GENE_NUM + 1];
+        List<Integer> counts = new ArrayList<>();
         int j = 0;
         for (int i = 0; i <= MAX_GENE_NUM - MIN_GENE_NUM; i++) {
-            while (j < genome.length && currGenome[j] == i) {
+            while (j < genome.size() && currGenome.get(j) == i) {
                 j++;
             }
-            counts[i - MIN_GENE_NUM] = j;
+            counts.add(j);
         }
         return counts;
     }
@@ -178,10 +192,10 @@ public class Animal extends AbstractSprite {
     }
 
     // Look for an index of the lowest number that is not lower than the target
-    private int binarySearchGE(int[] arr, int l, int r, int target) {
+    private int binarySearchGE(List<Integer> arr, int l, int r, int target) {
         int m = (l + r) / 2;
         if (l == r) return r;
-        if (target > arr[m]) return binarySearchGE(arr, m + 1, r, target);
+        if (target > arr.get(m)) return binarySearchGE(arr, m + 1, r, target);
         return binarySearchGE(arr, l, m, target);
     }
 
@@ -190,21 +204,21 @@ public class Animal extends AbstractSprite {
         return values[Random.randInt(values.length - 1)];
     }
 
-    private int[] generateRandomGenome() {
-        int[] newGenome = new int[GENES_COUNT];
+    private List<Integer> generateRandomGenome() {
+        List<Integer> newGenome = new ArrayList<>();
         for (int i = 0; i < GENES_COUNT; i++) {
-            newGenome[i] = (Random.randInt(MIN_GENE_NUM, MAX_GENE_NUM));
+            newGenome.add(Random.randInt(MIN_GENE_NUM, MAX_GENE_NUM));
         }
-        Arrays.sort(newGenome);
+        Collections.sort(newGenome);
         return newGenome;
     }
 
-    private static int[] mergeGenomes(int[] genome1, int energy1,
-                                      int[] genome2, int energy2) {
+    private static List<Integer> mergeGenomes(List<Integer> genome1, int energy1,
+                                              List<Integer> genome2, int energy2) {
         // Randomly select the part of the genes belonging to the stronger parent
         if (Random.random() < .5) {
             // Swap genomes
-            int[] temp1 = genome1;
+            List<Integer> temp1 = genome1;
             genome1 = genome2;
             genome2 = temp1;
             // Swap energies
@@ -214,9 +228,9 @@ public class Animal extends AbstractSprite {
         }
         // Split parents genomes and merge them into a new genome
         int splitIdx = (energy1 * GENES_COUNT) / (energy1 + energy2);
-        int[] newGenome = new int[GENES_COUNT];
-        for (int i = 0; i < splitIdx; i++) newGenome[i] = genome1[i];
-        for (int i = splitIdx; i < GENES_COUNT; i++) newGenome[i] = genome2[i];
+        List<Integer> newGenome = new ArrayList<>();
+        for (int i = 0; i < splitIdx; i++) newGenome.add(genome1.get(i));
+        for (int i = splitIdx; i < GENES_COUNT; i++) newGenome.add(genome2.get(i));
         return newGenome;
     }
 
@@ -238,7 +252,7 @@ public class Animal extends AbstractSprite {
         decreaseEnergy(deltaEnergy1);
         other.decreaseEnergy(deltaEnergy2);
         // Create the genome of the child
-        int[] childGenome = mergeGenomes(genome, energy, other.genome, other.energy);
+        List<Integer> childGenome = mergeGenomes(genome, energy, other.genome, other.energy);
         // Create a new animal with the energy inherited from its parents
         Animal child = new Animal(map, position, deltaEnergy1 + deltaEnergy2, childGenome);
         // Increment a number of parent's children

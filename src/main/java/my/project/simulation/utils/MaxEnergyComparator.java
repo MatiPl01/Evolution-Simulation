@@ -4,7 +4,7 @@ import my.project.simulation.sprites.Animal;
 
 import java.util.Comparator;
 
-public class EnergyComparator implements Comparator<Animal> {
+public class MaxEnergyComparator implements Comparator<Animal> {
     @Override
     public int compare(Animal o1, Animal o2) {
         // If animals have the same energy and are different animals, return

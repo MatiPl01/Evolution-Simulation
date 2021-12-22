@@ -1,5 +1,6 @@
 package my.project.simulation.sprites;
 
+import my.project.gui.simulation.sprites.IGuiSprite;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.utils.Vector2D;
@@ -11,6 +12,7 @@ public abstract class AbstractSprite implements ISprite {
     protected final IMap map;
     protected final Set<IObserver> observers = new HashSet<>();
     protected Vector2D position;
+    private IGuiSprite guiSprite;
 
     protected AbstractSprite(IMap map, Vector2D position) {
         this.map = map;
@@ -30,10 +32,7 @@ public abstract class AbstractSprite implements ISprite {
     }
 
     @Override
-    public void remove() {
-//        System.out.println("<<>> Called remove()");
-        for (IObserver observer: observers) observer.removeSprite(this);
-    }
+    public void remove() { for (IObserver observer: observers) observer.removeSprite(this); }
 
     @Override
     public void add() {
@@ -48,5 +47,15 @@ public abstract class AbstractSprite implements ISprite {
     @Override
     public void removeObserver(IObserver observer) {
         observers.remove(observer);
+    }
+
+    @Override
+    public void setGuiSprite(IGuiSprite guiSprite) {
+        this.guiSprite = guiSprite;
+    }
+
+    @Override
+    public IGuiSprite getGuiSprite() {
+        return guiSprite;
     }
 }

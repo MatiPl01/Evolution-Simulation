@@ -1,7 +1,5 @@
 package my.project.gui.simulation.grid;
 
-import javafx.application.Platform;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -26,8 +24,8 @@ public abstract class AbstractGridBuilder implements IBuilder {
     protected static final String STEPPE_DIRT_PATH = "src/main/resources/images/steppe/steppe-dirt.jpg";
     protected static final String JUNGLE_DIRT_PATH = "src/main/resources/images/jungle/jungle-dirt.jpg";
     protected static final String GRID_CLASS = "gridPane";
-    public static final String CELL_LABEL_CLASS = "cellLabel";
-    public static final String CELL_TEXTURE_CLASS = "cellTexture";
+    private static final String NUMBER_CELL_CLASS = "cellNumber";
+    private static final String CELL_TEXTURE_CLASS = "cellTexture";
     protected static final int CONTAINER_SIZE = 500;
     protected static final int PADDING_SIZE = 15;
     protected static final int CELL_SIZE = 50;
@@ -37,7 +35,7 @@ public abstract class AbstractGridBuilder implements IBuilder {
     protected final Vector2D mapLowerLeft;
     protected final Vector2D mapUpperRight;
 
-    protected final GridPane gridPane = new GridPane();
+    public final GridPane gridPane = new GridPane(); // TODO - change to protected
     protected final ScrollPane parentContainer;
     protected int gridHeight;
     protected int gridWidth;
@@ -62,7 +60,7 @@ public abstract class AbstractGridBuilder implements IBuilder {
         label.setText(text);
         VBox vBox = new VBox(label);
         vBox.setAlignment(Pos.BASELINE_CENTER);
-        vBox.getStyleClass().add(CELL_LABEL_CLASS);
+        vBox.getStyleClass().add(NUMBER_CELL_CLASS);
         gridPane.add(vBox, x, y, 1, 1);
     }
 
@@ -73,10 +71,10 @@ public abstract class AbstractGridBuilder implements IBuilder {
                 Vector2D gridPosition = getGridPosition(mapPosition);
                 if (map.getAreaType(mapPosition) == MapArea.STEPPE) {
                     loadTexture(STEPPE_DIRT_PATH, gridPosition.getX(), gridPosition.getY(),
-                                CELL_SIZE, CELL_SIZE, CELL_LABEL_CLASS);
+                                CELL_SIZE, CELL_SIZE, CELL_TEXTURE_CLASS);
                 } else {
                     loadTexture(JUNGLE_DIRT_PATH, gridPosition.getX(), gridPosition.getY(),
-                                CELL_SIZE, CELL_SIZE, CELL_LABEL_CLASS);
+                                CELL_SIZE, CELL_SIZE, CELL_TEXTURE_CLASS);
                 }
             }
         }

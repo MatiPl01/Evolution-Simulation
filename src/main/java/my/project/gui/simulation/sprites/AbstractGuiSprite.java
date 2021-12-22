@@ -4,6 +4,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.sprites.ISprite;
@@ -17,7 +18,8 @@ import java.io.FileNotFoundException;
 abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     protected final ISprite sprite;
     protected final IBuilder gridBuilder;
-    protected final VBox vBox = new VBox();
+    protected final VBox mainBox = new VBox();
+    protected final StackPane spriteBox = new StackPane();
     protected final ImageView imageView = new ImageView();
 
     public AbstractGuiSprite(ISprite sprite) {
@@ -34,9 +36,10 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
             imageView.setFitHeight(gridBuilder.getCellSize());
             imageView.setFitWidth(gridBuilder.getCellSize());
             imageView.setPreserveRatio(true);
-            vBox.getChildren().add(imageView);
+            spriteBox.getChildren().add(imageView);
+            mainBox.getChildren().add(spriteBox);
         } catch (FileNotFoundException e) {
-            vBox.getChildren().add(new Label(sprite.toString()));
+            mainBox.getChildren().add(new Label(sprite.toString()));
         }
     }
 
@@ -55,6 +58,6 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     }
 
     public Node getNode() {
-        return vBox;
+        return mainBox;
     }
 }

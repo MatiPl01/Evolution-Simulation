@@ -7,6 +7,4 @@ public interface IEngine {
     void run();
 
     void addData(IMap map, ScrollPane parentContainer);
-
-    void renderNewFrame();
 }
