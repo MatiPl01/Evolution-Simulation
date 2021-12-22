@@ -1,6 +1,7 @@
 package my.project.gui.simulation.sprites;
 
 import javafx.scene.Node;
+import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.Vector2D;
 
 public interface IGuiSprite {
@@ -9,4 +10,6 @@ public interface IGuiSprite {
     Node getNode();
 
     void initialize();
+
+    ISprite getSprite();
 }

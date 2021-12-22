@@ -49,6 +49,9 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     }
 
     @Override
+    public ISprite getSprite() { return sprite; }
+
+    @Override
     public void removeSprite(ISprite sprite) {
         gridBuilder.removeSprite(this);
     }

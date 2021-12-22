@@ -18,40 +18,64 @@ import my.project.simulation.utils.Vector2D;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractGridBuilder implements IBuilder {
     protected static final String STEPPE_DIRT_PATH = "src/main/resources/images/steppe/steppe-dirt.jpg";
     protected static final String JUNGLE_DIRT_PATH = "src/main/resources/images/jungle/jungle-dirt.jpg";
-    protected static final String GRID_CLASS = "gridPane";
-    private static final String NUMBER_CELL_CLASS = "cellNumber";
-    private static final String CELL_TEXTURE_CLASS = "cellTexture";
+    protected static final String NUMBER_CELL_CLASS = "cellNumber";
+    protected static final String CELL_TEXTURE_CLASS = "cellTexture";
+    protected static final String STEPPE_CLASS = "steppe";
+    protected static final String JUNGLE_CLASS = "jungle";
+
     protected static final int CONTAINER_SIZE = 500;
     protected static final int PADDING_SIZE = 15;
     protected static final int CELL_SIZE = 50;
     protected static final int LABEL_FONT_SIZE = 20;
+    protected static final int GRID_SEGMENT_SIZE = 5;
 
     protected final IMap map;
-    protected final Vector2D mapLowerLeft;
-    protected final Vector2D mapUpperRight;
+    protected final Vector2D jungleLowerLeft;
+    protected final Vector2D jungleUpperRight;
 
-    public final GridPane gridPane = new GridPane(); // TODO - change to protected
-    protected final ScrollPane parentContainer;
-    protected int gridHeight;
+    protected final GridPane wrapperGrid = new GridPane();
+    protected final GridPane mapGrid = new GridPane();
+    protected final List<List<StackPane>> mapGridCells = new ArrayList<>();
+    private final ScrollPane parentContainer;
+
     protected int gridWidth;
+    protected int gridHeight;
+    protected int mapWidth;
+    protected int mapHeight;
 
     AbstractGridBuilder(IMap map, ScrollPane parentContainer) {
         this.map = map;
         this.parentContainer = parentContainer;
         List<Vector2D> mapBounds = map.getMapBoundingRect();
-        this.mapLowerLeft = mapBounds.get(0);
-        this.mapUpperRight = mapBounds.get(1);
-        gridPane.getStyleClass().add(GRID_CLASS);
+        Vector2D mapLowerLeft = mapBounds.get(0);
+        Vector2D mapUpperRight = mapBounds.get(1);
+        this.jungleLowerLeft = mapBounds.get(2);
+        this.jungleUpperRight = mapBounds.get(3);
+        this.mapWidth = mapUpperRight.getX() - mapLowerLeft.getX() + 1;
+        this.mapHeight = mapUpperRight.getY() - mapLowerLeft.getY() + 1;
         map.setGridBuilder(this);
     }
 
+    @Override
     public int getCellSize() {
         return CELL_SIZE;
+    }
+
+    protected void buildMapGrid() {
+        // Create wrapper columns
+        for (int i = 0; i < mapWidth; i++) {
+            mapGrid.getColumnConstraints().add(new ColumnConstraints(CELL_SIZE));
+        }
+        // Create wrapper  rows
+        for (int i = 0; i < mapWidth; i++) {
+            mapGrid.getRowConstraints().add(new RowConstraints(CELL_SIZE));
+        }
     }
 
     protected void addLabel(String text, int x, int y) {
@@ -61,19 +85,19 @@ public abstract class AbstractGridBuilder implements IBuilder {
         VBox vBox = new VBox(label);
         vBox.setAlignment(Pos.BASELINE_CENTER);
         vBox.getStyleClass().add(NUMBER_CELL_CLASS);
-        gridPane.add(vBox, x, y, 1, 1);
+        wrapperGrid.add(vBox, x, y, 1, 1);
     }
 
-    public void loadGridTextures() {
-        for (int i = 0; i <= mapUpperRight.getX(); i++) {
-            for (int j = 0; j <= mapUpperRight.getY(); j++) {
+    public void loadBackground() {
+        for (int i = 0; i < mapWidth; i++) {
+            for (int j = 0; j < mapHeight; j++) {
                 Vector2D mapPosition = new Vector2D(i, j);
-                Vector2D gridPosition = getGridPosition(mapPosition);
+
                 if (map.getAreaType(mapPosition) == MapArea.STEPPE) {
-                    loadTexture(STEPPE_DIRT_PATH, gridPosition.getX(), gridPosition.getY(),
+                    loadTexture(mapGrid, STEPPE_DIRT_PATH, mapPosition.getX(), mapHeight - mapPosition.getY() - 1,
                                 CELL_SIZE, CELL_SIZE, CELL_TEXTURE_CLASS);
                 } else {
-                    loadTexture(JUNGLE_DIRT_PATH, gridPosition.getX(), gridPosition.getY(),
+                    loadTexture(mapGrid, JUNGLE_DIRT_PATH, mapPosition.getX(), mapHeight - mapPosition.getY() - 1,
                                 CELL_SIZE, CELL_SIZE, CELL_TEXTURE_CLASS);
                 }
             }
@@ -81,7 +105,7 @@ public abstract class AbstractGridBuilder implements IBuilder {
     }
 
     // TODO - better error handling
-    protected void loadTexture(String imagePath, int x, int y, int width, int height, String className) {
+    protected void loadTexture(GridPane gridPane, String imagePath, int x, int y, int width, int height, String className) {
         try {
             Image image = new Image(new FileInputStream(imagePath));
             ImageView imageView = new ImageView(image);
@@ -96,7 +120,8 @@ public abstract class AbstractGridBuilder implements IBuilder {
     }
 
     protected void renderGrid(int renderedWidth, int renderedHeight) {
-        StackPane innerContainer = new StackPane(gridPane);
+        setupMapGridCells();
+        StackPane innerContainer = new StackPane(wrapperGrid);
         Group outerContainer = new Group(innerContainer);
 
         parentContainer.setPrefWidth(CONTAINER_SIZE);
@@ -112,18 +137,28 @@ public abstract class AbstractGridBuilder implements IBuilder {
         parentContainer.addEventFilter(ScrollEvent.ANY, new ZoomHandler(innerContainer, scale));
     }
 
-    public void addSprite(IGuiSprite guiSprite) {
-        Vector2D gridPosition = getGridPosition(guiSprite.getPosition());
-        gridPane.add(guiSprite.getNode(), gridPosition.getX(), gridPosition.getY(), 1, 1);
+    protected void setupMapGridCells() {
+        for (int i = 0; i < mapWidth; i++) {
+            mapGridCells.add(new ArrayList<>());
+            for (int j = 0; j < mapHeight; j++) {
+                StackPane stackPane = new StackPane();
+                mapGridCells.get(i).add(stackPane);
+                mapGrid.add(stackPane, i, mapHeight - j - 1, 1, 1);
+            }
+        }
     }
 
+    @Override
+    public void addSprite(IGuiSprite guiSprite) throws IllegalArgumentException {
+        Vector2D position = guiSprite.getPosition();
+        StackPane stackPane = mapGridCells.get(position.getX()).get(position.getY());
+        stackPane.getChildren().add(guiSprite.getNode());
+    }
+
+    @Override
     public void removeSprite(IGuiSprite guiSprite) {
-        gridPane.getChildren().remove(guiSprite.getNode());
+        Vector2D position = guiSprite.getPosition();
+        StackPane stackPane = mapGridCells.get(position.getX()).get(position.getY());
+        stackPane.getChildren().remove(guiSprite.getNode());
     }
-
-    abstract Vector2D getGridPosition(Vector2D position);
-
-    abstract void addColumnsNumbers();
-
-    abstract void addRowsNumbers();
 }

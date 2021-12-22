@@ -235,6 +235,8 @@ public abstract class AbstractMap implements IMap, IObserver {
         return new ArrayList<>() {{
             add(mapLowerLeft);
             add(mapUpperRight);
+            add(jungleLowerleft);
+            add(jungleUpperRight);
         }};
     }
 

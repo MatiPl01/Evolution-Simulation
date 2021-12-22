@@ -7,11 +7,11 @@ public interface IBuilder {
 
     void buildGrid();
 
-    void loadGridTextures();
-
-    void renderGrid();
-
     void addSprite(IGuiSprite guiSprite);
 
     void removeSprite(IGuiSprite guiSprite);
+
+    void renderGrid();
+
+    void loadBackground();
 }

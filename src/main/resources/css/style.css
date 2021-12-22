@@ -1,7 +1,3 @@
-/*.gridPane Line {*/
-/*    -fx-stroke: #492a0d;*/
-/*}*/
-
 .simulationsContainer {
     -fx-background-color: black;
 }
@@ -9,6 +5,18 @@
 .cellTexture {
     -fx-background-color: #492a0d;
     -fx-background-insets: -1px;
+}
+
+.steppe {
+    -fx-background-color: #b06b32;
+    -fx-background-insets: -1px;
+    -fx-border-color: #222;
+}
+
+.jungle {
+    -fx-background-color: #3f1b03;
+    -fx-background-insets: -1px;
+    -fx-border-color: #222;
 }
 
 .cellNumber {

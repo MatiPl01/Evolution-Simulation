@@ -51,7 +51,7 @@ public class SimulationVisualizer {
 
     public void drawGrid() {
         gridBuilder.buildGrid();
-        gridBuilder.loadGridTextures();
+        gridBuilder.loadBackground();
         gridBuilder.renderGrid();
     }
 

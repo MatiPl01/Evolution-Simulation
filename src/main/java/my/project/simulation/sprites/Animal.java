@@ -134,7 +134,7 @@ public class Animal extends AbstractSprite {
         if (energy <= 0) {
             if (tracker != null && tracker.getTrackedAnimal() == this) tracker.recordAnimalDeath();
             remove();
-            System.out.println("Removed animal: ID: " + ID + ", position: " + position + ", prev position: " + prevPosition + ", days alive: " + daysAlive +", energy: " + energy +", guiSprite: " + getGuiSprite() + ", guiSprite still visible?: " + ((AbstractGridBuilder)map.getGridBuilder()).gridPane.getChildren().contains(getGuiSprite().getNode()) + ", is contained in mapAnimals?: " + map.getAllAnimals().contains(this));
+            System.out.println("Removed animal: ID: " + ID + ", position: " + position + ", prev position: " + prevPosition + ", days alive: " + daysAlive +", energy: " + energy +", guiSprite: " + getGuiSprite() + ", is contained in mapAnimals?: " + map.getAllAnimals().contains(this));
         } else {
             int angleNum = chooseRotationAngleNum();
             decreaseEnergy(map.getMoveEnergy());

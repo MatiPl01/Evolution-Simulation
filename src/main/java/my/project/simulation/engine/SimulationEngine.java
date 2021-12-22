@@ -26,7 +26,7 @@ public class SimulationEngine implements IEngine, Runnable {
             e.printStackTrace();
         }
         // Set some timeout to ensure that everything is displayed
-        sleep(1000);
+        sleep(10000);// TODO - remove me after implementing animation start via gui
 
         // TODO - remove code below
         int i = 0;
