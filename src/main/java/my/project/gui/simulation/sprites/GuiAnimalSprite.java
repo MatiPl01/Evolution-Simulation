@@ -4,8 +4,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import my.project.gui.utils.ImageLoader;
 import my.project.simulation.sprites.Animal;
 import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.AnimalTracker;
@@ -14,6 +16,7 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
     private static final double OPACITY = .3;
     private static final double ID_FONT_SIZE = 14;
     private static final String ID_BOX_CLASS = "animalIDBox";
+    private static final Image IMAGE = ImageLoader.loadImage("src/main/resources/images/animals/leopard.png");
 
     private ProgressBar energyBar;
     private VBox overlayBox;
@@ -47,6 +50,11 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
         energyBar.setProgress(.5);
         updateAngle();
         updateEnergyBar();
+    }
+
+    @Override
+    Image getImage() {
+        return IMAGE;
     }
 
     // TODO - add some event which fires this method
@@ -91,14 +99,14 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
         return Math.min(1. * currEnergy / startEnergy, 1);
     }
 
-    private String getHealthBarColor() {
+    private String getEnergyBarColor() {
         double energyRatio = getEnergyRatio();
-        if (energyRatio > .5) return "rgb(" + (int)((1 - energyRatio) * 2 * 255) + ", 255, 0)";
+        if (energyRatio > .5) return "rgb(" + (int)(Math.max(1 - energyRatio, 0) * 2 * 255) + ", 255, 0)";
         else return "rgb(255," + (int)(energyRatio * 2 * 255) + ", 0)";
     }
 
     private void updateEnergyBar() {
         energyBar.setProgress(getEnergyRatio());
-        energyBar.setStyle("-fx-accent: " + getHealthBarColor());
+        energyBar.setStyle("-fx-accent: " + getEnergyBarColor());
     }
 }

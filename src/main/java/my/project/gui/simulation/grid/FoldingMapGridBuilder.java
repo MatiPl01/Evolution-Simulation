@@ -1,18 +1,11 @@
 package my.project.gui.simulation.grid;
 
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.RowConstraints;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import my.project.simulation.maps.IMap;
-import my.project.simulation.utils.Vector2D;
-
-import java.util.List;
 
 public class FoldingMapGridBuilder extends AbstractGridBuilder {
 
-    public FoldingMapGridBuilder(IMap map, ScrollPane parentContainer) {
+    public FoldingMapGridBuilder(IMap map, AnchorPane parentContainer) {
         super(map, parentContainer);
         // Store dimensions of a grid
         gridHeight = mapHeight + 1;
@@ -20,26 +13,23 @@ public class FoldingMapGridBuilder extends AbstractGridBuilder {
     }
 
     public void buildGrid() {
-        // Build grids
-        buildMapGrid();
-        buildWrapperGrid();
+        setupBackground();
+        // Create columns
+        for (int i = 0; i < gridWidth; i++) {
+            wrapperGrid.getColumnConstraints().add(new ColumnConstraints(CELL_SIZE));
+        }
+        // Create rows
+        for (int i = 0; i < gridHeight; i++) {
+            wrapperGrid.getRowConstraints().add(new RowConstraints(CELL_SIZE));
+        }
         // Add columns numbers
         addColumnsNumbers();
         // Add rows numbers
         addRowsNumbers();
         // Add grids to the wrapper grid
-        wrapperGrid.add(mapGrid, 1, 0, mapWidth, mapHeight);
-    }
-
-    private void buildWrapperGrid() {
-        // Create wrapper columns
-        for (int i = 0; i < gridWidth; i++) {
-            wrapperGrid.getColumnConstraints().add(new ColumnConstraints(CELL_SIZE));
-        }
-        // Create wrapper  rows
-        for (int i = 0; i < gridHeight; i++) {
-            wrapperGrid.getRowConstraints().add(new RowConstraints(CELL_SIZE));
-        }
+        wrapperGrid.add(backgroundPane, 1, 0, mapWidth, mapHeight);
+        wrapperGrid.add(plantsGrid, 1, 0, mapWidth, mapHeight);
+        wrapperGrid.add(animalsGrid, 1, 0, mapWidth, mapHeight);
     }
 
     protected void addColumnsNumbers() {

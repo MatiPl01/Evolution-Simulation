@@ -1,14 +1,10 @@
 package my.project.simulation.sprites;
 
-import my.project.gui.simulation.grid.AbstractGridBuilder;
 import my.project.gui.simulation.sprites.GuiAnimalSprite;
 import my.project.gui.simulation.sprites.IGuiSprite;
-import my.project.simulation.utils.AnimalTracker;
-import my.project.simulation.utils.IObserver;
+import my.project.simulation.utils.*;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.enums.MapDirection;
-import my.project.simulation.utils.Random;
-import my.project.simulation.utils.Vector2D;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +15,6 @@ public class Animal extends AbstractSprite {
     private static final int MAX_GENE_NUM = 7;
     private static final int GENES_COUNT = 32;
     private static final double BREED_ENERGY_LOSS_RATIO = .25;
-    private final String IMG_PATH = "src/main/resources/images/animals/leopard.png";
 
     private final List<Integer> genome;
     private final List<Integer> genesCounts;
@@ -81,11 +76,6 @@ public class Animal extends AbstractSprite {
         };
     }
 
-    @Override
-    public String getImagePath() {
-        return IMG_PATH;
-    }
-
     public Vector2D getPrevPosition() {
         return prevPosition;
     }
@@ -134,7 +124,6 @@ public class Animal extends AbstractSprite {
         if (energy <= 0) {
             if (tracker != null && tracker.getTrackedAnimal() == this) tracker.recordAnimalDeath();
             remove();
-            System.out.println("Removed animal: ID: " + ID + ", position: " + position + ", prev position: " + prevPosition + ", days alive: " + daysAlive +", energy: " + energy +", guiSprite: " + getGuiSprite() + ", is contained in mapAnimals?: " + map.getAllAnimals().contains(this));
         } else {
             int angleNum = chooseRotationAngleNum();
             decreaseEnergy(map.getMoveEnergy());
@@ -188,15 +177,7 @@ public class Animal extends AbstractSprite {
     private int chooseRotationAngleNum() {
         // Using Binary Search, look for the next random rotation angle
         // considering animal's preferences
-        return binarySearchGE(genesCounts, 0, MAX_GENE_NUM - MIN_GENE_NUM, Random.randInt(1, GENES_COUNT));
-    }
-
-    // Look for an index of the lowest number that is not lower than the target
-    private int binarySearchGE(List<Integer> arr, int l, int r, int target) {
-        int m = (l + r) / 2;
-        if (l == r) return r;
-        if (target > arr.get(m)) return binarySearchGE(arr, m + 1, r, target);
-        return binarySearchGE(arr, l, m, target);
+        return Search.binarySearchGE(genesCounts, 0, MAX_GENE_NUM - MIN_GENE_NUM, Random.randInt(1, GENES_COUNT));
     }
 
     private MapDirection generateRandomDirection() {

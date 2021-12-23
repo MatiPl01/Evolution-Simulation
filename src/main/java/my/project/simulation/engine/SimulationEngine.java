@@ -2,6 +2,7 @@ package my.project.simulation.engine;
 
 import javafx.application.Platform;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.AnchorPane;
 import my.project.gui.simulation.visualization.SimulationVisualizer;
 import my.project.simulation.maps.IMap;
 
@@ -25,8 +26,6 @@ public class SimulationEngine implements IEngine, Runnable {
             System.out.println("An error has occurred during maps initialization");
             e.printStackTrace();
         }
-        // Set some timeout to ensure that everything is displayed
-        sleep(10000);// TODO - remove me after implementing animation start via gui
 
         // TODO - remove code below
         int i = 0;
@@ -39,10 +38,10 @@ public class SimulationEngine implements IEngine, Runnable {
 
                 // TODO - remove code below
                 i++;
-                if (i % 100 == 0) {
+                if (i % 5000 == 0) {
                     activeVisualizers.forEach(SimulationVisualizer::pauseVisualization);
                     activeVisualizers.forEach(SimulationVisualizer::showDominantGenomesAnimals);
-                    sleep(4000);
+                    sleep(5000);
                     activeVisualizers.forEach(SimulationVisualizer::hideDominantGenomesAnimals);
                     activeVisualizers.forEach(SimulationVisualizer::startVisualization);
                 }
@@ -54,11 +53,11 @@ public class SimulationEngine implements IEngine, Runnable {
             }
         }
         // TODO - move statistics saving to another place (only if user decides to generate a file with statistics)
-        for (IMap map: visualizers.values()) map.getStatsMeter().generateCSVFile();
+//        for (IMap map: visualizers.values()) map.getStatsMeter().generateCSVFile();
     }
 
     @Override
-    public void addData(IMap map, ScrollPane parentContainer) {
+    public void addData(IMap map, AnchorPane parentContainer) {
         SimulationVisualizer visualizer = new SimulationVisualizer(map, parentContainer);
         visualizers.put(visualizer, map);
         activeVisualizers.add(visualizer);

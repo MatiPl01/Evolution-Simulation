@@ -25,13 +25,13 @@ public abstract class AbstractMap implements IMap, IObserver {
     protected final Vector2D mapUpperRight;
     protected final Vector2D jungleLowerleft;
     protected final Vector2D jungleUpperRight;
-    protected final int fieldsCount;
 
     protected final Map<Vector2D, SortedSet<Animal>> mapAnimals = new HashMap<>();
     protected final Map<Vector2D, AbstractPlant> mapPlants = new HashMap<>();
     protected final Set<AbstractPlant> eatenPlants = new HashSet<>();
     protected final PrefixTree<Integer, Animal> genomesTree = new PrefixTree<>(Animal.getPossibleGenes());
 
+    protected final int fieldsCount;
     private final int initialAnimalsCount;
     private MapStrategy strategy = MapStrategy.NORMAL; // Default strategy is normal
     private int magicRespawnsCount = 0;
@@ -169,7 +169,6 @@ public abstract class AbstractMap implements IMap, IObserver {
             breedAnimals();
             spawnPlants();
             updateStatistics();
-            System.out.println("Day num: " + dayNum + ", animals alive: " + getAnimalsAliveCount() +", died animals: " + diedAnimalsCount);
         }
     }
 
@@ -253,12 +252,12 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     public void initialize() {
-        randomlyPalceAnimals(initialAnimalsCount);
+        randomlyPlaceAnimals(initialAnimalsCount);
         spawnPlants();
         updateStatistics();
     }
 
-    private void randomlyPalceAnimals(int animalsCount) {
+    private void randomlyPlaceAnimals(int animalsCount) {
         int minX = mapLowerLeft.getX();
         int maxX = mapUpperRight.getX();
         int minY = mapLowerLeft.getY();
@@ -286,10 +285,10 @@ public abstract class AbstractMap implements IMap, IObserver {
     private void removeAnimal(Animal animal, Vector2D position) throws NoSuchElementException {
         Set<Animal> animals = mapAnimals.get(position);
         if (animals != null && animals.contains(animal)) animals.remove(animal);
-        // Sometimes Sets goes crazy when dealing with mutable objects
-        // and can't see that they store a particular object. In such case,
-        // we will compare all animals from a set one by one with the animal
-        // which will be removed.
+            // Sometimes Sets goes crazy when dealing with mutable objects
+            // and can't see that they store a particular object. In such case,
+            // we will compare all animals from a set one by one with the animal
+            // which will be removed.
         else {
             if (animals != null) {
                 Iterator<Animal> it = animals.iterator();
@@ -425,16 +424,16 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private Vector2D getSteppeEmptyFieldVector(boolean allowPlants) {
         /*
-        *  +---+---+---+
-        *  | 0 | 1 | 2 |
-        *  +---+---+---+
-        *  | 3 |   | 4 |
-        *  +---+---+---+
-        *  | 5 | 6 | 7 |
-        *  +---+---+---+
-        */
+         *  +---+---+---+
+         *  | 0 | 1 | 2 |
+         *  +---+---+---+
+         *  | 3 |   | 4 |
+         *  +---+---+---+
+         *  | 5 | 6 | 7 |
+         *  +---+---+---+
+         */
         int segmentsCount = 8;
-        int segmentIdx = Random.randInt(segmentsCount - 1);
+        int segmentIdx = getRandomSegmentIndex();
 
         Vector2D position = null;
         int count = 0;
@@ -449,6 +448,18 @@ public abstract class AbstractMap implements IMap, IObserver {
             segmentIdx = (segmentIdx + 1) % segmentsCount;
         }
         return position;
+    }
+
+    private int getRandomSegmentIndex() {
+        int randX = Random.randInt(mapLowerLeft.getX(), mapUpperRight.getX());
+        int randY = Random.randInt(mapLowerLeft.getY(), mapUpperRight.getY());
+        if (randX < jungleLowerleft.getX() || randX > jungleUpperRight.getX()) {
+            if (randY < jungleLowerleft.getY()) return Random.randInt(1) == 0 ? 5 : 7;
+            if (randY > jungleUpperRight.getY()) return Random.randInt(1) == 0 ? 0 : 2;
+            return Random.randInt(1) == 0 ? 3 : 4;
+        } else if (randY < jungleLowerleft.getY() || randY > jungleUpperRight.getY()) {
+            return Random.randInt(1) == 0 ? 1 : 6;
+        } else return Random.randInt(7);
     }
 
     private Vector2D getSegmentLowerLeft(int segmentIdx) throws IllegalArgumentException {
@@ -487,6 +498,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Calculate segment dimensions
         int segmentWidth = maxX - minX + 1;
         int segmentHeight = maxY - minY + 1;
+
         // Return null is a segment doesn't exist
         if (segmentHeight == 0 || segmentWidth == 0) return null;
         int i = position.getX() * segmentHeight + position.getY();
@@ -529,12 +541,12 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private void updateStatistics() {
         statsMeter.updateStatistics(getAnimalsAliveCount(),
-                                    diedAnimalsCount,
-                                    plantsCount,
-                                    getDominantGenomes(),
-                                    calcAverageAliveEnergy(),
-                                    calcAverageDiedAnimalsLifespan(),
-                                    calcAverageAliveChildrenCount());
+                diedAnimalsCount,
+                plantsCount,
+                getDominantGenomes(),
+                calcAverageAliveEnergy(),
+                calcAverageDiedAnimalsLifespan(),
+                calcAverageAliveChildrenCount());
     }
 
     private void handleMagicRespawn() { // TODO - add some information in gui that the magic respawn is performed
@@ -548,7 +560,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         while (i < remainingEmptyFields && animalsIt.hasNext()) {
             Animal currAnimal = animalsIt.next();
             Vector2D position = Vector2D.randomVector(mapLowerLeft.getX(), mapUpperRight.getX(),
-                                                      mapLowerLeft.getY(), mapUpperRight.getY());
+                    mapLowerLeft.getY(), mapUpperRight.getY());
             position = getSegmentEmptyFieldVector(position, mapLowerLeft, mapUpperRight, true);
             (new Animal(this, position, startEnergy, currAnimal.getGenome())).add();
         }

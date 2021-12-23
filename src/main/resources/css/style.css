@@ -2,21 +2,20 @@
     -fx-background-color: black;
 }
 
-.cellTexture {
-    -fx-background-color: #492a0d;
-    -fx-background-insets: -1px;
+.linesGrid Line {
+    -fx-stroke: red;
 }
 
-.steppe {
-    -fx-background-color: #b06b32;
-    -fx-background-insets: -1px;
-    -fx-border-color: #222;
+.jungleArea {
+    -fx-background-image: url(../images/jungle/jungle-dirt.jpg);
+    -fx-background-repeat: repeat;
+    -fx-background-size: 50px;
 }
 
-.jungle {
-    -fx-background-color: #3f1b03;
-    -fx-background-insets: -1px;
-    -fx-border-color: #222;
+.steppeArea {
+    -fx-background-image: url(../images/steppe/steppe-dirt.jpg);
+    -fx-background-repeat: repeat;
+    -fx-background-size: 50px;
 }
 
 .cellNumber {
@@ -76,3 +75,4 @@
     -fx-border-radius: 10px;
     -fx-background-radius: 10px;
 }
+

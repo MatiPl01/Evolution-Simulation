@@ -1,19 +1,17 @@
 package my.project.gui.simulation.sprites;
 
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.sprites.ISprite;
 import my.project.simulation.utils.IObserver;
 import my.project.simulation.utils.Vector2D;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
 
 abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     protected final ISprite sprite;
@@ -30,16 +28,21 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
 
     @Override
     public void initialize() {
-        try {
-            Image image = new Image(new FileInputStream(sprite.getImagePath()));
+        Image image = getImage();
+        if (image != null) {
             imageView.setImage(image);
             imageView.setFitHeight(gridBuilder.getCellSize());
             imageView.setFitWidth(gridBuilder.getCellSize());
             imageView.setPreserveRatio(true);
             spriteBox.getChildren().add(imageView);
             mainBox.getChildren().add(spriteBox);
-        } catch (FileNotFoundException e) {
-            mainBox.getChildren().add(new Label(sprite.toString()));
+        } else {
+            Label label = new Label(sprite.toString());
+            label.setFont(new Font(gridBuilder.getCellSize() / 1.2));
+            VBox vBox = new VBox(label);
+            label.setStyle("-fx-text-fill: #419c11");
+            vBox.setAlignment(Pos.CENTER);
+            mainBox.getChildren().add(vBox);
         }
     }
 
@@ -63,4 +66,6 @@ abstract class AbstractGuiSprite implements IObserver, IGuiSprite {
     public Node getNode() {
         return mainBox;
     }
+
+    abstract Image getImage();
 }

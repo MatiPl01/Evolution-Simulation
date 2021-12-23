@@ -105,30 +105,11 @@ public class PrefixTree<K, V> { // inserted data must be a list
         while (count >= leavesNodesSets.size()) leavesNodesSets.add(new HashSet<>());
         leavesNodesSets.get(count - 1).remove(currNode);
         leavesNodesSets.get(count).add(currNode);
-
-        System.out.println("=== After add ===");
-        for (int i = 0; i < leavesNodesSets.size(); i++) {
-            Set<V> a = new HashSet<>();
-            for (TreeNode<K, V> node: leavesNodesSets.get(i)) {
-                a.addAll(node.getValues());
-            }
-            System.out.println(i + ". " + a.stream().map(c -> ((Animal)c).getID()).collect(Collectors.toList()));
-        }
     }
 
     public void remove(List<K> key, V value) throws NoSuchElementException {
-        System.out.println("REMOVE key: " + key + " value " + value + "(" + ((Animal) value).getID() + ")");
         TreeNode<K, V> currNode = root;
         TreeNode<K, V> leaf = getLeafNode(key);
-        System.out.println("Leaf values: " + leaf.getValues());
-        System.out.println("=== Before remove ===");
-        for (int i = 0; i < leavesNodesSets.size(); i++) {
-            Set<V> a = new HashSet<>();
-            for (TreeNode<K, V> node: leavesNodesSets.get(i)) {
-                a.addAll(node.getValues());
-            }
-            System.out.println(i + ". " + a.stream().map(c -> ((Animal)c).getID()).collect(Collectors.toList()));
-        }
         // Remove the leaf node from a proper set in leavesNodesSets array
         leaf.removeValue(value);
         Set<TreeNode<K, V>> leafSet = leavesNodesSets.get(leaf.getCount());
@@ -149,15 +130,6 @@ public class PrefixTree<K, V> { // inserted data must be a list
         // Add a leaf node back to the leavesNodesSets on the updated position
         // if number of key occurrences is still grater than 0.
         leavesNodesSets.get(leaf.getCount()).add(leaf);
-        System.out.println("Removed leaf count: " + leaf.getCount());
-        System.out.println("=== After remove ===");
-        for (int i = 0; i < leavesNodesSets.size(); i++) {
-            Set<V> a = new HashSet<>();
-            for (TreeNode<K, V> node: leavesNodesSets.get(i)) {
-                a.addAll(node.getValues());
-            }
-            System.out.println(i + ". " + a.stream().map(c -> ((Animal)c).getID()).collect(Collectors.toList()));
-        }
         // Check if the last Set in leavesNodeSets is empty
         int lastSetIndex = leavesNodesSets.size() - 1;
         Set<TreeNode<K, V>> leavesNodesSet = leavesNodesSets.get(lastSetIndex);

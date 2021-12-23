@@ -2,6 +2,7 @@ package my.project.gui.simulation.visualization;
 
 import javafx.application.Platform;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.AnchorPane;
 import my.project.gui.simulation.grid.FencedMapGridBuilder;
 import my.project.gui.simulation.grid.FoldingMapGridBuilder;
 import my.project.gui.simulation.grid.IBuilder;
@@ -16,7 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import java.util.stream.Collectors;
 
 public class SimulationVisualizer {
     private final IBuilder gridBuilder;
@@ -24,7 +24,7 @@ public class SimulationVisualizer {
     private boolean isPaused = false;
     private boolean isShowingDominantGenomesAnimals = false;
 
-    public SimulationVisualizer(IMap map, ScrollPane parentContainer) throws IllegalArgumentException {
+    public SimulationVisualizer(IMap map, AnchorPane parentContainer) throws IllegalArgumentException {
         this.map = map;
         if (map instanceof FoldingMap) {
             this.gridBuilder = new FoldingMapGridBuilder(map, parentContainer);
@@ -50,9 +50,8 @@ public class SimulationVisualizer {
     }
 
     public void drawGrid() {
-        gridBuilder.buildGrid();
-        gridBuilder.loadBackground();
-        gridBuilder.renderGrid();
+        gridBuilder.initialize();
+        gridBuilder.render();
     }
 
     public void showNewFrame() {

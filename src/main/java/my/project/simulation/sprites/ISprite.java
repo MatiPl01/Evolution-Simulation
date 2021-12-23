@@ -13,13 +13,6 @@ public interface ISprite {
      */
     String toString();
 
-    /**
-     * Get a path to the image representing a map element
-     *
-     * @return The string containing a path to the image
-     */
-    String getImagePath();
-
     Vector2D getPosition();
 
     IMap getMap();
