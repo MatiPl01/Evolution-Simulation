@@ -1,7 +1,6 @@
 package my.project.gui.simulation.visualization;
 
 import javafx.application.Platform;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import my.project.gui.simulation.grid.FencedMapGridBuilder;
 import my.project.gui.simulation.grid.FoldingMapGridBuilder;
@@ -98,7 +97,7 @@ public class SimulationVisualizer {
         FutureTask<Void> future = new FutureTask<>(() -> {
             isShowingDominantGenomesAnimals = false;
             Set<Animal> animals = map.getDominantGenomesAnimals();
-            bringAnimalsToTop(map.getMaxFieldEnergyAnimals());
+            bringAnimalsToTop(map.getMaxEnergyFieldAnimals());
             disableFocusOnAnimals(animals);
             hideAnimalsIDs(animals);
         }, null);

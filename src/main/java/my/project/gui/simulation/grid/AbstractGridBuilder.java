@@ -24,7 +24,6 @@ public abstract class AbstractGridBuilder implements IBuilder {
     protected static final String STEPPE_AREA_CLASS = "steppeArea";
     protected static final String LINES_GRID_CLASS = "gridLines";
 
-    protected static final int CONTAINER_SIZE = 500;
     protected static final int PADDING_SIZE = 15;
     protected static final int CELL_SIZE = 50;
     protected static final int LABEL_FONT_SIZE = 20;
@@ -33,10 +32,9 @@ public abstract class AbstractGridBuilder implements IBuilder {
     protected final Vector2D jungleLowerLeft;
     protected final Vector2D jungleUpperRight;
 
-    protected final List<List<StackPane>> animalsGridHelper = new ArrayList<>();
+    protected final List<List<StackPane>> spritesGridHelper = new ArrayList<>();
     protected final GridPane wrapperGrid = new GridPane();
-    protected final GridPane animalsGrid = new GridPane();
-    protected final GridPane plantsGrid = new GridPane();
+    protected final GridPane spritesGrid = new GridPane();
     protected final StackPane backgroundPane = new StackPane();
     protected final AnchorPane parentContainer;
 
@@ -69,10 +67,9 @@ public abstract class AbstractGridBuilder implements IBuilder {
 
     @Override
     public void initialize() {
-        setupAnimalsGrid();
-        setupPlantsGrid();
+        setupSpritesGrid();
         buildGrid();
-        displayGridLines(plantsGrid);
+        displayGridLines(spritesGrid);
     }
 
     @Override
@@ -80,26 +77,22 @@ public abstract class AbstractGridBuilder implements IBuilder {
         renderGrid();
     }
 
-    private void setupPlantsGrid() {
-        setupGrid(plantsGrid, mapWidth, mapHeight);
-    }
-
-    private void setupAnimalsGrid() {
-        setupGrid(animalsGrid, mapWidth, mapHeight);
+    private void setupSpritesGrid() {
+        setupGrid(spritesGrid, mapWidth, mapHeight);
 
         for (int x = 0; x < mapWidth; x++) {
-            animalsGridHelper.add(new ArrayList<>());
-            for (int y = 0; y < mapWidth; y++) {
+            spritesGridHelper.add(new ArrayList<>());
+            for (int y = 0; y < mapHeight; y++) {
                 StackPane stackPane = new StackPane();
-                animalsGridHelper.get(x).add(stackPane);
-                animalsGrid.add(stackPane, x, mapHeight - 1 - y, 1, 1);
+                spritesGridHelper.get(x).add(stackPane);
+                spritesGrid.add(stackPane, x, mapHeight - y - 1, 1, 1);
             }
         }
     }
 
     private void setupGrid(GridPane gridPane, int width, int height) {
-        for (int i = 0; i < width; i++)  gridPane.getRowConstraints().add(new RowConstraints(CELL_SIZE));
-        for (int i = 0; i < height; i++) gridPane.getColumnConstraints().add(new ColumnConstraints(CELL_SIZE));
+        for (int i = 0; i < height; i++) gridPane.getRowConstraints().add(new RowConstraints(CELL_SIZE));
+        for (int i = 0; i < width; i++)  gridPane.getColumnConstraints().add(new ColumnConstraints(CELL_SIZE));
     }
 
     protected void addLabel(String text, int x, int y) {
@@ -122,31 +115,34 @@ public abstract class AbstractGridBuilder implements IBuilder {
     }
 
     protected void renderGrid(int renderedWidth, int renderedHeight) {
-        parentContainer.setPrefWidth(CONTAINER_SIZE);
-        parentContainer.setPrefHeight(CONTAINER_SIZE);
+        double parentHeight  = parentContainer.getBoundsInParent().getHeight();
+        double parentWidth   = parentContainer.getBoundsInParent().getWidth();
+        double containerSize = Math.min(parentHeight, parentWidth);
 
         wrapperGrid.setPadding(new Insets(PADDING_SIZE));
         wrapperGrid.setStyle("-fx-border-insets: " + PADDING_SIZE + "px");
         wrapperGrid.setStyle("-fx-background-insets: " + PADDING_SIZE + "px");
 
-        double initialScale = .95 * CONTAINER_SIZE / Math.max(renderedWidth, renderedHeight);
+        double initialScale = .95 * containerSize / Math.max(renderedWidth, renderedHeight);
 
         ScrollPane scrollPane = new ZoomableScrollPane(wrapperGrid, initialScale);
-        scrollPane.setPrefHeight(500);
-        scrollPane.setPrefWidth(500);
+        AnchorPane.setBottomAnchor(scrollPane, 0.0);
+        AnchorPane.setTopAnchor(scrollPane, 0.0);
+        AnchorPane.setLeftAnchor(scrollPane, 0.0);
+        AnchorPane.setRightAnchor(scrollPane, 0.0);
         parentContainer.getChildren().add(scrollPane);
     }
 
     @Override
     public void addSprite(IGuiSprite guiSprite) throws IllegalArgumentException {
         Vector2D position = guiSprite.getPosition();
-        animalsGridHelper.get(position.getX()).get(position.getY()).getChildren().add(guiSprite.getNode());
+        spritesGridHelper.get(position.getX()).get(position.getY()).getChildren().add(guiSprite.getNode());
     }
 
     @Override
     public void removeSprite(IGuiSprite guiSprite) {
         Vector2D position = guiSprite.getPosition();
-        animalsGridHelper.get(position.getX()).get(position.getY()).getChildren().remove(guiSprite.getNode());
+        spritesGridHelper.get(position.getX()).get(position.getY()).getChildren().remove(guiSprite.getNode());
     }
 
     private void displayGridLines(GridPane gridPane) {

@@ -77,7 +77,7 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
             VBox idBox = new VBox(idLabel);
             idBox.setAlignment(Pos.TOP_CENTER);
             idBox.getStyleClass().add(ID_BOX_CLASS);
-            idBox.setMaxWidth(ID_FONT_SIZE * 2);
+//            idBox.setMaxWidth(ID_FONT_SIZE * 2);
             idBox.setMaxHeight(ID_FONT_SIZE * 2);
             overlayBox.getChildren().add(idBox);
         }

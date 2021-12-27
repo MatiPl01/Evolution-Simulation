@@ -11,7 +11,6 @@ public class FoldingMap extends AbstractMap {
                       int animalsCount) {
         super(width, height, jungleRatio, startEnergy, moveEnergy, bushEnergy, grassEnergy, animalsCount);
         statsMeter = new StatsMeter(STATISTICS_FILE_NAME);
-
     }
 
     @Override

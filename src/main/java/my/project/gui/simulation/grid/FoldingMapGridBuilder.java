@@ -28,8 +28,7 @@ public class FoldingMapGridBuilder extends AbstractGridBuilder {
         addRowsNumbers();
         // Add grids to the wrapper grid
         wrapperGrid.add(backgroundPane, 1, 0, mapWidth, mapHeight);
-        wrapperGrid.add(plantsGrid, 1, 0, mapWidth, mapHeight);
-        wrapperGrid.add(animalsGrid, 1, 0, mapWidth, mapHeight);
+        wrapperGrid.add(spritesGrid, 1, 0, mapWidth, mapHeight);
     }
 
     protected void addColumnsNumbers() {

@@ -1,5 +1,6 @@
 package my.project.simulation.maps;
 
+import my.project.gui.charts.ChartDrawer;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
@@ -33,7 +34,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     protected final int fieldsCount;
     private final int initialAnimalsCount;
-    private MapStrategy strategy = MapStrategy.NORMAL; // Default strategy is normal
+    private MapStrategy strategy = MapStrategy.NORMAL; // The default strategy is normal
     private int magicRespawnsCount = 0;
 
     private long dayNum = 0;
@@ -77,9 +78,9 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void changeSpritePosition(ISprite sprite) throws IllegalArgumentException, NoSuchElementException {
         if (!(sprite instanceof Animal animal)) {
             throw new IllegalArgumentException("Cannot change position of a sprite which is not an animal");
-        } else if (animal.getPosition() != animal.getPrevPosition()) {
+        } else {
             // Remove an animal from the previous position on a map
-            removeAnimal(animal, animal.getPrevPosition());
+            removeAnimal(animal, animal.getPrevPosition(), true);
             // Add an animal at a new position on the map
             placeAnimal(animal);
         }
@@ -89,7 +90,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void removeSprite(ISprite sprite) throws NoSuchElementException {
         // If a sprite is an animal object
         if (sprite instanceof Animal animal) {
-            removeAnimal(animal, animal.getPosition());
+            removeAnimal(animal, animal.getPosition(), true);
             diedAnimalsCount++;
             diedAnimalsSumDaysAlive += animal.getDaysAlive();
             genomesTree.remove(animal.getGenome(), animal);
@@ -222,12 +223,17 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
-    public Set<Animal> getMaxFieldEnergyAnimals() {
+    public Set<Animal> getMaxEnergyFieldAnimals() {
         Set<Animal> animals = new HashSet<>();
         for (SortedSet<Animal> currAnimals: mapAnimals.values()) {
             animals.add(currAnimals.first());
         }
         return animals;
+    }
+
+    @Override
+    public void setChartDrawer(ChartDrawer chartDrawer) {
+        this.statsMeter.setChartDrawer(chartDrawer);
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -282,13 +288,13 @@ public abstract class AbstractMap implements IMap, IObserver {
         if (plant != null) eatenPlants.add(plant);
     }
 
-    private void removeAnimal(Animal animal, Vector2D position) throws NoSuchElementException {
+    private void removeAnimal(Animal animal, Vector2D position, boolean removeSetIfEmpty) throws NoSuchElementException {
         Set<Animal> animals = mapAnimals.get(position);
         if (animals != null && animals.contains(animal)) animals.remove(animal);
-            // Sometimes Sets goes crazy when dealing with mutable objects
-            // and can't see that they store a particular object. In such case,
-            // we will compare all animals from a set one by one with the animal
-            // which will be removed.
+        // Sometimes Set goes crazy when dealing with mutable objects
+        // and can't see that they store a particular object. In such case,
+        // we will compare all animals from a set one by one with the animal
+        // which will be removed.
         else {
             if (animals != null) {
                 Iterator<Animal> it = animals.iterator();
@@ -306,7 +312,7 @@ public abstract class AbstractMap implements IMap, IObserver {
             throw new NoSuchElementException("Sprite " + animal + " is not on the map");
         }
         // Remove the whole set if there are no more animals
-        if (animals.size() == 0) mapAnimals.remove(position);
+        if (removeSetIfEmpty && animals.size() == 0) mapAnimals.remove(position);
     }
 
     private void placePlant(AbstractPlant plant) throws IllegalArgumentException {
@@ -355,7 +361,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     private void breedAnimals() {
-        for (Vector2D position: mapAnimals.keySet()) {
+        for (Vector2D position: new ArrayList<>(mapAnimals.keySet())) {
             Set<Animal> animals = mapAnimals.get(position);
             // Continue if there are not enough animals to breed on one field
             if (animals.size() < 2) continue;
@@ -363,7 +369,16 @@ public abstract class AbstractMap implements IMap, IObserver {
             List<Animal> animalsToBreed = getAnimalsToBreed(position);
             // Continue if there are no enough animals on the current field
             if (animalsToBreed == null) continue;
-            animalsToBreed.get(0).breed(animalsToBreed.get(1));
+            Animal parent1 = animalsToBreed.get(0);
+            Animal parent2 = animalsToBreed.get(1);
+            parent1.breed(parent2);
+            // To ensure that the order of animals in a mapAnimals TreeSet
+            // is non-decreasing, we have to remove animals which are parents
+            // and add them again with modified energy value
+            removeAnimal(parent1, position, false);
+            removeAnimal(parent2, position, false);
+            placeAnimal(parent1);
+            placeAnimal(parent2);
         }
     }
 

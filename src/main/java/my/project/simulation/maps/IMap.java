@@ -1,5 +1,6 @@
 package my.project.simulation.maps;
 
+import my.project.gui.charts.ChartDrawer;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.enums.MapStrategy;
@@ -54,7 +55,9 @@ public interface IMap {
 
     Set<Animal> getAnimalsWithGenome(List<Integer> genome);
 
-    Set<Animal> getMaxFieldEnergyAnimals();
+    Set<Animal> getMaxEnergyFieldAnimals();
 
     Set<Animal> getDominantGenomesAnimals();
+
+    void setChartDrawer(ChartDrawer chartDrawer);
 }

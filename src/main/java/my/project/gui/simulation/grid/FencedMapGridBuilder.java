@@ -53,8 +53,7 @@ public class FencedMapGridBuilder extends AbstractGridBuilder{
         addRowsNumbers();
         // Add grids to the wrapper grid
         wrapperGrid.add(backgroundPane, 2, 1, mapWidth, mapHeight);
-        wrapperGrid.add(plantsGrid, 2, 1, mapWidth, mapHeight);
-        wrapperGrid.add(animalsGrid, 2, 1, mapWidth, mapHeight);
+        wrapperGrid.add(spritesGrid, 2, 1, mapWidth, mapHeight);
         // Load fence textures
         loadFenceTextures();
     }

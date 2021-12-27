@@ -1,12 +1,9 @@
 package my.project.simulation.stats;
 
 import javafx.application.Platform;
+import my.project.gui.charts.ChartDrawer;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -14,22 +11,30 @@ import java.util.Set;
 public class StatsMeter {
     private static final String DEFAULT_PATH = "./output/";
     private static final String ERROR_MESSAGE = "Error writing statistics to the file";
+    private static final String ANIMALS_COUNT_SERIES_NAME = "Number of animals";
+    private static final String PLANTS_COUNT_SERIES_NAME = "Number of plants";
+    private static final String AVERAGE_ENERGY_SERIES_NAME = "Average energy";
+    private static final String AVERAGE_LIFESPAN_SERIES_NAME = "Average lifespan";
+    private static final String AVERAGE_CHILDREN_SERIES_NAME = "Average number of children";
 
-    private final String defaultName;
-    private Path tempFile;
+    private final String defaultFileName;
 
     private final List<StatsRecord> dailyStatistics = new ArrayList<>();
     private StatsRecord statsSum = new StatsRecord(0, 0, 0, 0, 0);
-    private int savesCount = 0;
+    private int dayNum = 0;
+    private ChartDrawer chartDrawer;
 
-    public StatsMeter(String defaultName) {
-        this.defaultName = defaultName;
+    public StatsMeter(String defaultFileName) {
+        this.defaultFileName = defaultFileName;
+    }
 
-        try {
-            this.tempFile = Files.createTempFile("stats", ".tmp");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void setChartDrawer(ChartDrawer chartDrawer) {
+        this.chartDrawer = chartDrawer;
+        chartDrawer.createSeries(ANIMALS_COUNT_SERIES_NAME,
+                                 PLANTS_COUNT_SERIES_NAME,
+                                 AVERAGE_ENERGY_SERIES_NAME,
+                                 AVERAGE_LIFESPAN_SERIES_NAME,
+                                 AVERAGE_CHILDREN_SERIES_NAME);
     }
 
     public void updateStatistics(long aliveAnimalsCount,
@@ -39,7 +44,12 @@ public class StatsMeter {
                                  double averageAliveEnergy,
                                  double averageDiedLifespan,
                                  double averageAliveChildren) {
-        // TODO - send updates to GUI components (to implement)
+        chartDrawer.update(dayNum,
+                           aliveAnimalsCount,
+                           plantsCount,
+                           averageAliveEnergy,
+                           averageDiedLifespan,
+                           averageAliveChildren);
 
         // Save daily statistics
         StatsRecord record = new StatsRecord(aliveAnimalsCount,
@@ -48,12 +58,11 @@ public class StatsMeter {
                                              averageDiedLifespan,
                                              averageAliveChildren);
 
-        // Add a record to the dailyStatistics if cannot write to the temporary file
-        if (tempFile == null || !writeToTempFile(record)) dailyStatistics.add(record);
 
+        dailyStatistics.add(record);
         // Update sums of statistic which will be used to calculate an average
         statsSum = statsSum.add(record);
-        savesCount++;
+        dayNum++;
     }
 
     public void updateTrackedAnimalDeath(long dayNum) {
@@ -68,59 +77,27 @@ public class StatsMeter {
         // TODO - send updates to GUI components (to implement)
     }
 
-    private boolean writeToTempFile(StatsRecord record) {
-        try {
-            Files.write(tempFile, new ArrayList<>() {{ add(record.toString()); }}, StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Return false if operation failed
-            return false;
-        }
-        return true;
-    }
-
-    private void writeLinesFromTempFile(BufferedWriter bw) throws IOException {
-        Files.lines(tempFile, StandardCharsets.UTF_8).forEach(line -> {
-            try {
-                bw.write(line + "\n");
-            } catch (IOException e) {
-                System.out.println(ERROR_MESSAGE);
-                e.printStackTrace();
-            } finally {
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (IOException e) {
-                    System.out.println("Cannot delete a temporary file");
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
     private void writeLinesFromArray(BufferedWriter bw) throws IOException {
         for (StatsRecord record: dailyStatistics) bw.write(record.toString() + "\n");
     }
 
     private void writeAverageStats(BufferedWriter bw) throws IOException {
         String sep = statsSum.getSeparator();
-        bw.write(1. * statsSum.aliveAnimalsCount() / savesCount + sep +
-                1. * statsSum.plantsCount() / savesCount + sep +
-                statsSum.averageAliveEnergy() / savesCount + sep +
-                statsSum.averageDiedLifespan() / savesCount + sep +
-                statsSum.averageAliveChildren() / savesCount);
+        bw.write(1. * statsSum.aliveAnimalsCount() / dayNum + sep +
+                1. * statsSum.plantsCount() / dayNum + sep +
+                statsSum.averageAliveEnergy() / dayNum + sep +
+                statsSum.averageDiedLifespan() / dayNum + sep +
+                statsSum.averageAliveChildren() / dayNum);
     }
 
     public void generateCSVFile() {
         Platform.runLater(() -> {
-            String outputPath = DEFAULT_PATH + defaultName;
+            String outputPath = DEFAULT_PATH + defaultFileName;
             System.out.println("Generating statistics CSV file in: " + outputPath);
 
             try {
                 BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath));
-                // If statistics were stored in a temporary file
-                if (dailyStatistics.size() == 0 && tempFile != null) writeLinesFromTempFile(bw);
-                // If statistics were stored in a dailyStatistics list
-                else writeLinesFromArray(bw);
+               writeLinesFromArray(bw);
                 writeAverageStats(bw);
                 bw.close();
                 System.out.println("Statistics file: " + outputPath + " was successfully generated");
