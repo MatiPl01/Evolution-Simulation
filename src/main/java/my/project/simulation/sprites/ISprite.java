@@ -6,11 +6,6 @@ import my.project.simulation.utils.IObserver;
 import my.project.simulation.utils.Vector2D;
 
 public interface ISprite {
-    /**
-     * Get String representation of an element,
-     *
-     * @return The string representing an element.
-     */
     String toString();
 
     Vector2D getPosition();
@@ -23,20 +18,8 @@ public interface ISprite {
 
     void remove();
 
-    /**
-     * Add an object observing a map element
-     *
-     * @param observer
-     *              Object that observes a map element
-     */
     void addObserver(IObserver observer);
 
-    /**
-     * Remove an object observing a map element
-     *
-     * @param observer
-     *              Object that observes a map element
-     */
     void removeObserver(IObserver observer);
 
     void setGuiSprite(IGuiSprite guiSprite);

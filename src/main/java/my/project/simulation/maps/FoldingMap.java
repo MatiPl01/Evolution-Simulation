@@ -7,9 +7,10 @@ import my.project.simulation.utils.Vector2D;
 
 public class FoldingMap extends AbstractMap {
     private static final String STATISTICS_FILE_NAME = "stats-foldingMap.csv";
+    private static final String MAP_NAME = "Folding map";
 
     public FoldingMap(MapSettings mapSettings) {
-        super(mapSettings);
+        super(MAP_NAME, mapSettings);
         statsMeter = new StatsMeter(this, STATISTICS_FILE_NAME);
     }
 

@@ -1,12 +1,12 @@
 {
   "foldingMap": {
     "width": {
-      "def": 15,
+      "def": 10,
       "min": 1,
       "max": 100
     },
     "height": {
-      "def": 12,
+      "def": 10,
       "min": 1,
       "max": 100
     },

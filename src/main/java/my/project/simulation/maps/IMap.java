@@ -1,5 +1,6 @@
 package my.project.simulation.maps;
 
+import javafx.scene.control.Label;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.enums.MapStrategy;
@@ -65,4 +66,6 @@ public interface IMap {
     Set<Animal> getMaxEnergyFieldAnimals();
 
     Set<Animal> getDominantGenomesAnimals();
+
+    void setInfoBox(Label infoBox);
 }

@@ -52,7 +52,6 @@ public class SimulationVisualizer {
 
     public void bringAnimalsToTop(Set<Animal> animals) {
         for (Animal animal: animals) {
-            System.out.println(">>> Bring " + animal + " with energy " + animal.getEnergy() + " to front ");
             animal.getGuiSprite().getNode().toFront();
         }
     }

@@ -105,7 +105,6 @@ public class AbstractContainerController {
         setupRefreshInterval();
         engineThread.start();
         map.getGridBuilder().setEventsController(this);
-        System.out.println(map.getGridBuilder());
     }
 
     private void setupRefreshInterval() {
@@ -153,7 +152,6 @@ public class AbstractContainerController {
     }
 
     protected void trackButtonClicked() {
-        System.out.println("State " + trackingButtonState);
         switch (trackingButtonState) {
             case CHOOSE -> {
                 enableAnimalPicker();

@@ -4,10 +4,10 @@ import javafx.application.Platform;
 import my.project.gui.simulation.visualization.SimulationVisualizer;
 import my.project.gui.enums.SimulationState;
 import my.project.simulation.maps.IMap;
+import my.project.simulation.utils.Time;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 public class SimulationEngine implements IEngine, Runnable {
     private final SimulationVisualizer visualizer;
@@ -46,7 +46,6 @@ public class SimulationEngine implements IEngine, Runnable {
     public void run() {
         // Initialize maps and wait for them to render completely
         boolean wasInitializationSuccessful = initialize();
-        System.out.println("Initialized successfully? " + wasInitializationSuccessful);
         if (!wasInitializationSuccessful) return;
 
         // Start rendering simulation frames
@@ -56,7 +55,7 @@ public class SimulationEngine implements IEngine, Runnable {
                     boolean wasFrameRendered = renderNewFrame();
                     if (!wasFrameRendered) return;
                 }
-                case PAUSED -> sleep(SLEEP_TIME);
+                case PAUSED -> Time.sleep(SLEEP_TIME);
                 case FINISHED -> {
                     return;
                 }
@@ -100,25 +99,7 @@ public class SimulationEngine implements IEngine, Runnable {
         }
         long endTime = System.currentTimeMillis();
         // Add some delay is tasks were finished to early
-        sleep(Math.max(0, refreshInterval - (int)(endTime - startTime)));
+        Time.sleep(Math.max(0, refreshInterval - (int)(endTime - startTime)));
         return true;
-    }
-
-    private void sleep(int milliseconds) {
-        try {
-            Thread sleepingThread = new Thread(() -> {
-                try {
-                    TimeUnit.MILLISECONDS.sleep(milliseconds);
-                } catch (InterruptedException e) {
-                    System.out.println("Sleeping interrupted");
-                    e.printStackTrace();
-                }
-            });
-            sleepingThread.start();
-            sleepingThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Sleeping interrupted");
-        }
     }
 }

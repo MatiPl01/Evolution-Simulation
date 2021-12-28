@@ -1,7 +1,9 @@
 package my.project.simulation.maps;
 
+import javafx.scene.control.Label;
 import my.project.gui.config.MapSettings;
 import my.project.gui.simulation.grid.IBuilder;
+import my.project.gui.utils.InfoLogger;
 import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
 import my.project.simulation.utils.*;
@@ -14,8 +16,12 @@ import java.util.*;
 
 public abstract class AbstractMap implements IMap, IObserver {
     private static final double MIN_BREED_ENERGY_RATIO = .5;
+    private static final int INFO_DISPLAY_TIME = 5000; // ms
+    private static final String DEFAULT_INFO_MESSAGE = "";
+
     private final int magicStrategyRespawnThreshold;
     private final int maxMagicRespawnsCount;
+    private final String mapName;
 
     private final int width;
     private final int height;
@@ -36,7 +42,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     protected final int fieldsCount;
     private final int initialAnimalsCount;
-    private MapStrategy strategy;
+    private final MapStrategy strategy;
     private int magicRespawnsCount = 0;
 
     private long dayNum = 0;
@@ -45,12 +51,14 @@ public abstract class AbstractMap implements IMap, IObserver {
     private long plantsCount = 0;
     private long diedAnimalsSumDaysAlive = 0;
 
-    private IBuilder gridBuilder;
     protected StatsMeter statsMeter;
+    private IBuilder gridBuilder;
     private AnimalTracker animalTracker;
+    private InfoLogger infoLogger;
 
-    AbstractMap(MapSettings mapSettings) {
+    AbstractMap(String mapName, MapSettings mapSettings) {
         // Store initial values
+        this.mapName = mapName;
         this.width = mapSettings.width();
         this.height = mapSettings.height();
         this.initialAnimalsCount = mapSettings.animalsCount();
@@ -77,6 +85,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         // Calculate a total number of map fields
         this.fieldsCount = (mapUpperRight.getX() - mapLowerLeft.getX() + 1)
                          * (mapUpperRight.getY() - mapLowerLeft.getY()) + 1;
+
     }
 
     @Override
@@ -99,12 +108,8 @@ public abstract class AbstractMap implements IMap, IObserver {
             diedAnimalsCount++;
             diedAnimalsSumDaysAlive += animal.getDaysAlive();
             genomesTree.remove(animal.getGenome(), animal);
-            // If a strategy is set to magic
-            if (strategy == MapStrategy.MAGIC &&
-                    animalsCount - diedAnimalsCount == magicStrategyRespawnThreshold &&
-                    magicRespawnsCount++ < maxMagicRespawnsCount) {
-                handleMagicRespawn();
-            }
+            // If a strategy is set to magic and conditions are fulfilled
+            if (meetsMagicRespawnConditions()) handleMagicRespawn();
         }
         // If a sprite is a plant object
         else if (sprite instanceof AbstractPlant) {
@@ -239,10 +244,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     @Override
     public Set<Animal> getMaxEnergyFieldAnimals() {
         Set<Animal> animals = new HashSet<>();
-//        System.out.println("Map animals values: " + mapAnimals.values());
         for (Vector2D position: mapAnimals.keySet()) {
-//            System.out.println("Animals at: " + position + " " + mapAnimals.get(position));
-//            System.out.println("First animal " + mapAnimals.get(position).first());
             Animal animal = getMaxEnergyFieldAnimal(position);
             if (animal != null) animals.add(animal);
         }
@@ -257,6 +259,13 @@ public abstract class AbstractMap implements IMap, IObserver {
     @Override
     public Set<Animal> getAllFieldAnimals(Vector2D position) {
         return mapAnimals.get(position) != null ? mapAnimals.get(position) : new TreeSet<>(new MaxEnergyComparator());
+    }
+
+    @Override
+    public void setInfoBox(Label infoBox) {
+        this.infoLogger = new InfoLogger(infoBox);
+        infoLogger.setDefaultText(DEFAULT_INFO_MESSAGE);
+        statsMeter.setInfoLogger(infoLogger);
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -586,8 +595,14 @@ public abstract class AbstractMap implements IMap, IObserver {
                 calcAverageAliveChildrenCount());
     }
 
-    private void handleMagicRespawn() { // TODO - add some information in gui that the magic respawn is performed
-        System.out.println("MAGIC RESPAWN HAPPENS NOW");
+    private boolean meetsMagicRespawnConditions() {
+        return (strategy == MapStrategy.MAGIC &&
+                animalsCount - diedAnimalsCount == magicStrategyRespawnThreshold &&
+                magicRespawnsCount++ < maxMagicRespawnsCount);
+    }
+
+    private void handleMagicRespawn() {
+        infoLogger.displayInfo( "Performed magic respawn on " + mapName, INFO_DISPLAY_TIME);
         // Spawn remaining animals copies if magic strategy was chosen
         int animalsAliveCount = (int)(animalsCount - diedAnimalsCount);
         int remainingEmptyFields = fieldsCount - animalsAliveCount;

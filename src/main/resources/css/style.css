@@ -1,9 +1,5 @@
-.simulationsContainer {
-    -fx-background-color: black;
-}
-
-.linesGrid Line {
-    -fx-stroke: red;
+.gridLines Line {
+    -fx-stroke: #391d07;
 }
 
 .jungleArea {

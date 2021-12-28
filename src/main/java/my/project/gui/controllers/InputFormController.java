@@ -7,7 +7,7 @@ import javafx.scene.control.TextField;
 import my.project.gui.config.MapConfig;
 import my.project.gui.config.MapSettings;
 import my.project.gui.config.ValueConfig;
-import my.project.gui.enums.MapType;
+import my.project.simulation.maps.MapType;
 import my.project.simulation.enums.MapStrategy;
 
 import java.util.ArrayList;
@@ -152,6 +152,13 @@ public class InputFormController {
         );
     }
 
+    public boolean checkIfValid() {
+        for (TextField textField: textFields) {
+            if (Objects.equals(textField.getText(), "")) return false;
+        }
+        return true;
+    }
+
     private void disableMagicInput() {
         magicRespawnsInput.setText("0");
         magicAnimalsInput.setText("0");
@@ -192,7 +199,6 @@ public class InputFormController {
     }
 
     private void setupIntValueValidator(TextField textField, ValueConfig<Integer> valueConfig) {
-        System.out.println("1");
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (Objects.equals(newValue, "")) return;
             try {
@@ -201,7 +207,6 @@ public class InputFormController {
                 textField.setText(oldValue);
             }
         });
-        System.out.println("2");
         textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) {
                 String inputText = textField.getText();

@@ -12,12 +12,11 @@ import javafx.stage.Stage;
 import my.project.gui.config.Config;
 import my.project.gui.config.ConfigLoader;
 import my.project.gui.config.MapSettings;
-import my.project.gui.enums.MapType;
+import my.project.gui.utils.DialogUtils;
+import my.project.simulation.maps.MapType;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class InputBoxController {
     private static final String CONFIG_JSON_PATH = "./src/main/resources/config.json";
@@ -49,12 +48,21 @@ public class InputBoxController {
     private void onStart() {
         Map<MapType, MapSettings> settings = new HashMap<>();
         if (!foldingMapCheckbox.isSelected()) {
+            if (!foldingInputFormController.checkIfValid()) {
+                DialogUtils.informationDialog("Invalid settings", "Invalid in Folding map" , "Found empty text fields");
+                return;
+            }
             settings.put(MapType.FOLDING, foldingInputFormController.generateMapSettings());
         }
         if (!fencedMapCheckbox.isSelected()) {
+            if (!fencedInputFormController.checkIfValid()) {
+                DialogUtils.informationDialog("Invalid settings", "Invalid in Fenced map" , "Found empty text fields");
+                return;
+            }
             settings.put(MapType.FENCED, fencedInputFormController.generateMapSettings());
         }
-        openMainScene(settings);
+        boolean areValid = validateSettings(settings);
+        if (areValid) openMainScene(settings);
     }
 
     @FXML
@@ -91,7 +99,6 @@ public class InputBoxController {
 
     public void dontShowChecked(CheckBox checkBox) {
         if (checkBox.isSelected()) {
-            System.out.println("Is selected");
             if (checkBox == foldingMapCheckbox) fencedMapCheckbox.setDisable(true);
             else foldingMapCheckbox.setDisable(true);
         } else uncheckCheckboxes();
@@ -142,5 +149,36 @@ public class InputBoxController {
         scene.getStylesheets().add(css);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private boolean validateSettings(Map<MapType, MapSettings> settings) {
+        StringBuilder stringBuilder = new StringBuilder();
+        Set<MapType> invalidSet = new HashSet<>();
+
+        for (MapType mapType: settings.keySet()) {
+            MapSettings s = settings.get(mapType);
+            int fieldsCount = s.width() * s.height();
+            stringBuilder.append("\nIn ").append(mapType).append(" settings:\n");
+            if (s.animalsCount() > fieldsCount) {
+                stringBuilder.append("Number of animals should be lower than a number of map fields.\n");
+                invalidSet.add(mapType);
+            }
+            if (s.animalsCount() <= s.magicRespawnAnimals()) {
+                stringBuilder.append("Number of animals for a magic respawn should be greater than an initial number of animals.\n");
+                invalidSet.add(mapType);
+            }
+            if (!invalidSet.contains(mapType)) {
+                stringBuilder.append("No issues were found.\n");
+            }
+        }
+
+        if (invalidSet.size() > 0) {
+            List<String> invalidList = new ArrayList<>();
+            for (MapType mapType: invalidSet) invalidList.add(mapType.toString());
+            DialogUtils.informationDialog("Invalid settings", "Invalid settings were found in " + String.join(", ", invalidList), stringBuilder.toString());
+            return false;
+        }
+
+        return true;
     }
 }

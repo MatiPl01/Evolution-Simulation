@@ -2,9 +2,10 @@ package my.project.gui.controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import my.project.gui.config.MapSettings;
-import my.project.gui.enums.MapType;
+import my.project.simulation.maps.MapType;
 import my.project.simulation.maps.FencedMap;
 import my.project.simulation.maps.FoldingMap;
 import my.project.simulation.maps.IMap;
@@ -21,14 +22,20 @@ public class MainController {
     @FXML
     private SplitPane mainSplitPane;
 
+    @FXML
+    private Label infoBoxLeft;
+
+    @FXML
+    private Label infoBoxRight;
+
     public void init(Map<MapType, MapSettings> settings) throws IllegalArgumentException, IOException {
         if (settings.containsKey(MapType.FOLDING) && settings.containsKey(MapType.FENCED)) {
-            loadContainer(createMap(MapType.FOLDING, settings.get(MapType.FOLDING)), LEFT_CONTAINER_PATH);
-            loadContainer(createMap(MapType.FENCED, settings.get(MapType.FENCED)), RIGHT_CONTAINER_PATH);
+            loadContainer(createMap(MapType.FOLDING, settings.get(MapType.FOLDING)), LEFT_CONTAINER_PATH, infoBoxLeft);
+            loadContainer(createMap(MapType.FENCED, settings.get(MapType.FENCED)), RIGHT_CONTAINER_PATH, infoBoxRight);
         } else if (settings.containsKey(MapType.FOLDING)) {
-            loadContainer(createMap(MapType.FOLDING, settings.get(MapType.FOLDING)), LEFT_CONTAINER_PATH);
+            loadContainer(createMap(MapType.FOLDING, settings.get(MapType.FOLDING)), LEFT_CONTAINER_PATH, infoBoxLeft);
         } else if (settings.containsKey(MapType.FENCED)) {
-            loadContainer(createMap(MapType.FENCED, settings.get(MapType.FENCED)), LEFT_CONTAINER_PATH);
+            loadContainer(createMap(MapType.FENCED, settings.get(MapType.FENCED)), LEFT_CONTAINER_PATH, infoBoxLeft);
         } else throw new IllegalArgumentException("Invalid settings. Cannot create a map.");
     }
 
@@ -39,7 +46,7 @@ public class MainController {
         };
     }
 
-    private void loadContainer(IMap map, String path) throws IOException {
+    private void loadContainer(IMap map, String path, Label infoBox) throws IOException {
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource(path));
         SplitPane splitPane = loader.load();
@@ -47,10 +54,9 @@ public class MainController {
         mainSplitPane.getItems().add(splitPane);
         mainPaneWidth += splitPane.getPrefWidth();
         mainPaneHeight = Math.max(mainPaneHeight, splitPane.getPrefHeight());
-        System.out.println(mainPaneWidth);
-        System.out.println(mainPaneHeight);
         mainSplitPane.setPrefWidth(mainPaneWidth);
         mainSplitPane.setPrefHeight(mainPaneHeight);
+        map.setInfoBox(infoBox);
         controller.launch(map);
     }
 }

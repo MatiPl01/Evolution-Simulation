@@ -6,6 +6,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import my.project.gui.charts.ChartDrawer;
+import my.project.gui.utils.InfoLogger;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.sprites.Animal;
 
@@ -16,6 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StatsMeter {
+    private static final int INFO_DISPLAY_TIME = 5000; // ms
     private static final String DEFAULT_PATH = "./output/";
     private static final String ERROR_MESSAGE = "Error writing statistics to the file";
     private static final String ANIMALS_COUNT_SERIES_NAME = "Number of animals";
@@ -32,6 +34,7 @@ public class StatsMeter {
     private int dayNum = 0;
 
     private ChartDrawer chartDrawer;
+    private InfoLogger infoLogger;
     private VBox dominantGenomesBox;
 
     public StatsMeter(IMap map, String defaultFileName) {
@@ -50,6 +53,10 @@ public class StatsMeter {
 
     public void setDominantGenomesBox(VBox dominantGenomesBox) {
         this.dominantGenomesBox = dominantGenomesBox;
+    }
+
+    public void setInfoLogger(InfoLogger infoLogger) {
+        this.infoLogger = infoLogger;
     }
 
     public void updateStatistics(long aliveAnimalsCount,
@@ -127,14 +134,12 @@ public class StatsMeter {
     public void generateCSVFile() {
         Platform.runLater(() -> {
             String outputPath = DEFAULT_PATH + defaultFileName;
-            System.out.println("Generating statistics CSV file in: " + outputPath);
-
+            infoLogger.displayInfo("Saving stats file to " + outputPath, INFO_DISPLAY_TIME);
             try {
                 BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath));
                writeLinesFromArray(bw);
                 writeAverageStats(bw);
                 bw.close();
-                System.out.println("Statistics file: " + outputPath + " was successfully generated");
             } catch (IOException e) {
                 System.out.println(ERROR_MESSAGE);
                 e.printStackTrace();
