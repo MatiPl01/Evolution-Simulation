@@ -19,13 +19,14 @@ import static java.lang.Integer.parseInt;
 public class InputFormController {
     private static final String NORMAL_STRATEGY_NAME = "normal";
     private static final String MAGIC_STRATEGY_NAME = "magic";
+    private static final String DEFAULT_STRATEGY_NAME = NORMAL_STRATEGY_NAME;
 
     private String currentStrategy = NORMAL_STRATEGY_NAME;
 
     private InputBoxController parentController;
     private MapConfig mapConfig;
     private MapType mapType;
-    private List<TextField> textFields = new ArrayList<>();
+    private final List<TextField> textFields = new ArrayList<>();
 
     @FXML
     private TextField widthInput;
@@ -110,14 +111,14 @@ public class InputFormController {
         bushEnergyInput.setText(String.valueOf(mapConfig.bushEnergy.def));
         grassEnergyInput.setText(String.valueOf(mapConfig.grassEnergy.def));
         initialAnimalsInput.setText(String.valueOf(mapConfig.animalsCount.def));
-        setupCombobox(NORMAL_STRATEGY_NAME, MAGIC_STRATEGY_NAME);
+        strategyCombobox.setValue(DEFAULT_STRATEGY_NAME);
         if (Objects.equals(currentStrategy, NORMAL_STRATEGY_NAME)) disableMagicInput();
         else enableMagicInput();
     }
 
     public void clearInput() {
         textFields.forEach(field -> field.setText(""));
-        setupCombobox(NORMAL_STRATEGY_NAME, MAGIC_STRATEGY_NAME);
+        strategyCombobox.setValue(DEFAULT_STRATEGY_NAME);
     }
 
     private void disableInputFields() {

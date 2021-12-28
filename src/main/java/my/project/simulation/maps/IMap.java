@@ -52,8 +52,6 @@ public interface IMap {
 
     long getCurrentDayNum();
 
-    void setStrategy(MapStrategy strategy);
-
     Set<List<Integer>> getDominantGenomes();
 
     Set<Animal> getAllAnimals();

@@ -1,5 +1,6 @@
 package my.project.simulation.maps;
 
+import my.project.gui.config.MapSettings;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
@@ -13,8 +14,8 @@ import java.util.*;
 
 public abstract class AbstractMap implements IMap, IObserver {
     private static final double MIN_BREED_ENERGY_RATIO = .5;
-    private static final int MAGIC_STRATEGY_RESPAWN_THRESHOLD = 5;
-    private static final int MAX_MAGIC_RESPAWNS_COUNT = 3;
+    private final int magicStrategyRespawnThreshold;
+    private final int maxMagicRespawnsCount;
 
     private final int width;
     private final int height;
@@ -35,7 +36,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     protected final int fieldsCount;
     private final int initialAnimalsCount;
-    private MapStrategy strategy = MapStrategy.NORMAL; // The default strategy is normal
+    private MapStrategy strategy;
     private int magicRespawnsCount = 0;
 
     private long dayNum = 0;
@@ -48,23 +49,24 @@ public abstract class AbstractMap implements IMap, IObserver {
     protected StatsMeter statsMeter;
     private AnimalTracker animalTracker;
 
-    // TODO - add input type checking (on a frontEnd side)
-    AbstractMap(int width, int height, double jungleRatio,
-                int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
-                int animalsCount) {
+    AbstractMap(MapSettings mapSettings) {
         // Store initial values
-        this.width = width;
-        this.height = height;
-        this.initialAnimalsCount = animalsCount;
-        this.startEnergy = startEnergy;
-        this.moveEnergy = moveEnergy;
-        this.bushEnergy = bushEnergy;
-        this.grassEnergy = grassEnergy;
+        this.width = mapSettings.width();
+        this.height = mapSettings.height();
+        this.initialAnimalsCount = mapSettings.animalsCount();
+        this.startEnergy = mapSettings.startEnergy();
+        this.moveEnergy = mapSettings.moveEnergy();
+        this.bushEnergy = mapSettings.bushEnergy();
+        this.grassEnergy = mapSettings.grassEnergy();
+        this.magicStrategyRespawnThreshold = mapSettings.magicRespawnAnimals();
+        this.maxMagicRespawnsCount = mapSettings.magicRespawnsCount();
+        this.strategy = mapSettings.mapStrategy();
 
         // Calculate map upper-right bound vector
         this.mapUpperRight = new Vector2D(width - 1, height - 1);
 
         // Calculate jungle bounding vectors and a number of fields
+        double jungleRatio = mapSettings.jungleRatio();
         int jungleWidth = (int)Math.round(width * jungleRatio);
         if (jungleWidth % 2 != width % 2) jungleWidth += 1;
         int jungleHeight = (int)Math.round(height * jungleRatio);
@@ -99,8 +101,8 @@ public abstract class AbstractMap implements IMap, IObserver {
             genomesTree.remove(animal.getGenome(), animal);
             // If a strategy is set to magic
             if (strategy == MapStrategy.MAGIC &&
-                    animalsCount - diedAnimalsCount == MAGIC_STRATEGY_RESPAWN_THRESHOLD &&
-                    magicRespawnsCount++ < MAX_MAGIC_RESPAWNS_COUNT) {
+                    animalsCount - diedAnimalsCount == magicStrategyRespawnThreshold &&
+                    magicRespawnsCount++ < maxMagicRespawnsCount) {
                 handleMagicRespawn();
             }
         }
@@ -170,11 +172,6 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
-    public void setStrategy(MapStrategy strategy) {
-        this.strategy = strategy;
-    }
-
-    @Override
     public void update() {
         if (areAnimalsAlive()) {
             dayNum++;
@@ -192,7 +189,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
-    public void setAnimalTracker(AnimalTracker tracker) { // TODO - add a possibility tu setup trackers
+    public void setAnimalTracker(AnimalTracker tracker) {
         if (animalTracker != null) animalTracker.remove();
         animalTracker = tracker;
     }

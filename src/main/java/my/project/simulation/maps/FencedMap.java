@@ -1,15 +1,15 @@
 package my.project.simulation.maps;
 
+import my.project.gui.config.MapSettings;
+import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
 import my.project.simulation.utils.Vector2D;
 
 public class FencedMap extends AbstractMap {
     private static final String STATISTICS_FILE_NAME = "stats-fencedMap.csv";
 
-    public FencedMap(int width, int height, double jungleRatio,
-                     int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
-                     int animalsCount) {
-        super(width, height, jungleRatio, startEnergy, moveEnergy, bushEnergy, grassEnergy, animalsCount);
+    public FencedMap(MapSettings mapSettings) {
+        super(mapSettings);
         statsMeter = new StatsMeter(this, STATISTICS_FILE_NAME);
     }
 

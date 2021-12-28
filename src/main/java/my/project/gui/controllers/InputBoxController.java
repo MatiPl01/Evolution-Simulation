@@ -1,9 +1,14 @@
 package my.project.gui.controllers;
 
 import javafx.fxml.FXML;
+
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import my.project.gui.config.Config;
 import my.project.gui.config.ConfigLoader;
 import my.project.gui.config.MapSettings;
@@ -12,10 +17,11 @@ import my.project.gui.enums.MapType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Objects;
 
 public class InputBoxController {
     private static final String CONFIG_JSON_PATH = "./src/main/resources/config.json";
+    private static final String MAIN_SCENE_PATH = "/fxml/MainBox.fxml";
 
     private static final int FOLDING_MAP_TAB_INDEX = 0;
     private static final int FENCED_MAP_TAB_INDEX = 1;
@@ -48,7 +54,7 @@ public class InputBoxController {
         if (!fencedMapCheckbox.isSelected()) {
             settings.put(MapType.FENCED, fencedInputFormController.generateMapSettings());
         }
-        System.out.println(settings);
+        openMainScene(settings);
     }
 
     @FXML
@@ -105,5 +111,36 @@ public class InputBoxController {
             System.exit(1);
             return null;
         }
+    }
+
+    private void openMainScene(Map<MapType, MapSettings> settings) {
+        // Load main container
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource(MAIN_SCENE_PATH));
+        BorderPane borderPane = null;
+        try {
+            borderPane = loader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        MainController mainController = loader.getController();
+
+        // Load maps containers
+        try {
+            mainController.init(settings);
+        } catch (IOException e) {
+            System.out.println("Error while loading map containers");
+            e.printStackTrace();
+            return;
+        }
+
+        // Set main container in the scene
+        Stage stage = (Stage)formTabPane.getScene().getWindow();
+        assert borderPane != null;
+        Scene scene = new Scene(borderPane);
+        String css = Objects.requireNonNull(getClass().getResource("/css/style.css")).toExternalForm();
+        scene.getStylesheets().add(css);
+        stage.setScene(scene);
+        stage.show();
     }
 }

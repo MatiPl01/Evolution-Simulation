@@ -62,9 +62,6 @@ public class SimulationEngine implements IEngine, Runnable {
                 }
             }
         }
-
-        // TODO - move statistics saving to another place (only if user decides to generate a file with statistics)
-//        for (IMap map: visualizers.values()) map.getStatsMeter().generateCSVFile();
     }
 
     private boolean initialize() {

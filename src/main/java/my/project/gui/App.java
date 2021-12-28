@@ -5,7 +5,6 @@ import javafx.fxml.*;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import java.io.FileInputStream;
@@ -17,11 +16,6 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-//        FXMLLoader loader = new FXMLLoader();
-//        loader.setLocation(getClass().getResource("/fxml/MainBox.fxml"));
-//        BorderPane mainContainer = loader.load();
-//        Scene scene = new Scene(mainContainer);
-
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/fxml/InputBox.fxml"));
         AnchorPane inputContainer = loader.load();
