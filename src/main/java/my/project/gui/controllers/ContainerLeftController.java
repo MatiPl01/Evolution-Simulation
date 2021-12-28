@@ -5,14 +5,19 @@ import javafx.geometry.Side;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 
 public class ContainerLeftController extends AbstractContainerController {
     @FXML
-    private AnchorPane simulationBox;
+    protected AnchorPane simulationBox;
 
     @FXML
-    private AnchorPane chartBox;
+    protected AnchorPane chartBox;
+
+    @FXML
+    private VBox dominantGenomesBox;
 
     @FXML
     private Slider refreshSlider;
@@ -24,16 +29,61 @@ public class ContainerLeftController extends AbstractContainerController {
     private Label refreshLabel;
 
     @FXML
+    private Button dominantGenomesButton;
+
+    @FXML
+    private Button trackButton;
+
+    @FXML
+    private VBox trackedAnimalBox;
+
+    @FXML
+    private Label trackedAnimalID;
+
+    @FXML
+    private Label trackedAnimalChildren;
+
+    @FXML
+    private Label trackedAnimalDescendants;
+
+    @FXML
+    private Label trackedAnimalDeath;
+
+    @FXML
     private void initialize() {
         this.legendSide = Side.LEFT;
         setSimulationBox(simulationBox);
         setChartBox(chartBox);
+        setPauseButton(pauseButton);
         setRefreshSlider(refreshSlider);
         setRefreshLabel(refreshLabel);
+        setDominantGenomesBox(dominantGenomesBox);
+        setDominantGenomesButton(dominantGenomesButton);
+        setTrackButton(trackButton);
+        setTrackedAnimalBoxes(trackedAnimalBox,
+                              trackedAnimalID,
+                              trackedAnimalChildren,
+                              trackedAnimalDescendants,
+                              trackedAnimalDeath);
     }
 
     @FXML
     private void onPause() {
-        pauseButtonClicked(pauseButton);
+        pauseButtonClicked();
+    }
+
+    @FXML
+    private void onDominantShow() {
+        dominantButtonClicked();
+    }
+
+    @FXML
+    private void onTrackChoose() {
+        trackButtonClicked();
+    }
+
+    @FXML
+    private void onStatsFileSave() {
+        saveStatsFile();
     }
 }

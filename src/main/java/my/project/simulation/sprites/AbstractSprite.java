@@ -27,6 +27,17 @@ public abstract class AbstractSprite implements ISprite {
     }
 
     @Override
+    public Vector2D getDisplayedPosition() {
+        int width = map.getWidth();
+        int height = map.getHeight();
+        int x = position.getX() - width / 2;
+        int y = position.getY() - height / 2;
+        if (width % 2 == 1 && position.getX() >= width / 2) x += 1;
+        if (height % 2 == 1 && position.getY() >= height / 2) y += 1;
+        return new Vector2D(x, y);
+    }
+
+    @Override
     public IMap getMap() {
         return map;
     }

@@ -12,6 +12,6 @@ public class Bush extends AbstractPlant {
 
     @Override
     public String toString() {
-        return sign;
+        return sign + " " + getDisplayedPosition();
     }
 }

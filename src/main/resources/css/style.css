@@ -26,8 +26,8 @@
 
 .animalIDBox {
     -fx-border-width: 2px;
-    -fx-border-radius: 50%;
-    -fx-background-radius: 50%;
+    -fx-border-radius: 100px;
+    -fx-background-radius: 100px;
     -fx-background-color: #333;
     -fx-border-color: #000;
     -fx-background-insets: 1px;

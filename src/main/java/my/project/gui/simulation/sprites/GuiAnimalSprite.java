@@ -10,7 +10,6 @@ import javafx.scene.text.Font;
 import my.project.gui.utils.ImageLoader;
 import my.project.simulation.sprites.Animal;
 import my.project.simulation.sprites.ISprite;
-import my.project.simulation.utils.AnimalTracker;
 
 public class GuiAnimalSprite extends AbstractGuiSprite {
     private static final double OPACITY = .3;
@@ -57,11 +56,6 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
         return IMAGE;
     }
 
-    // TODO - add some event which fires this method
-    public void setupAnimalTracker() {
-        sprite.getMap().setAnimalTracker(new AnimalTracker((Animal) sprite));
-    }
-
     public void setTransparent(boolean isSet) {
         if (isSet) mainBox.setOpacity(OPACITY);
         else mainBox.setOpacity(1);
@@ -72,12 +66,13 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
         if (overlayBox == null) {
             overlayBox = new VBox();
             overlayBox.setAlignment(Pos.BOTTOM_LEFT);
-            Label idLabel = new Label(String.valueOf(((Animal) sprite).getID()));
+            String value = String.valueOf(((Animal) sprite).getID());
+            Label idLabel = new Label(value);
             idLabel.setFont(new Font(ID_FONT_SIZE));
             VBox idBox = new VBox(idLabel);
             idBox.setAlignment(Pos.TOP_CENTER);
             idBox.getStyleClass().add(ID_BOX_CLASS);
-//            idBox.setMaxWidth(ID_FONT_SIZE * 2);
+            idBox.setMaxWidth(ID_FONT_SIZE * value.length());
             idBox.setMaxHeight(ID_FONT_SIZE * 2);
             overlayBox.getChildren().add(idBox);
         }
@@ -106,7 +101,7 @@ public class GuiAnimalSprite extends AbstractGuiSprite {
     }
 
     private void updateEnergyBar() {
-        energyBar.setProgress(getEnergyRatio());
+        energyBar.setProgress(Math.max(0, getEnergyRatio()));
         energyBar.setStyle("-fx-accent: " + getEnergyBarColor());
     }
 }

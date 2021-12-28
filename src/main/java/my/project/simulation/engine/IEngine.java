@@ -1,6 +1,6 @@
 package my.project.simulation.engine;
 
-import my.project.simulation.enums.SimulationState;
+import my.project.gui.enums.SimulationState;
 
 public interface IEngine {
     void run();

@@ -1,6 +1,5 @@
 package my.project.simulation.maps;
 
-import my.project.gui.charts.ChartDrawer;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapArea;
 import my.project.simulation.enums.MapStrategy;
@@ -13,6 +12,10 @@ import java.util.List;
 import java.util.Set;
 
 public interface IMap {
+    int getHeight();
+
+    int getWidth();
+
     MapArea getAreaType(Vector2D position);
 
     Vector2D getNextPosition(Vector2D currPosition, Vector2D moveVector);
@@ -45,6 +48,8 @@ public interface IMap {
 
     void removeAnimalTracker();
 
+    AnimalTracker getAnimalTracker();
+
     long getCurrentDayNum();
 
     void setStrategy(MapStrategy strategy);
@@ -55,9 +60,11 @@ public interface IMap {
 
     Set<Animal> getAnimalsWithGenome(List<Integer> genome);
 
+    Animal getMaxEnergyFieldAnimal(Vector2D position);
+
+    Set<Animal> getAllFieldAnimals(Vector2D position);
+
     Set<Animal> getMaxEnergyFieldAnimals();
 
     Set<Animal> getDominantGenomesAnimals();
-
-    void setChartDrawer(ChartDrawer chartDrawer);
 }

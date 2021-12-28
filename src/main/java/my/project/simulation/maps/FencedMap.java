@@ -10,7 +10,7 @@ public class FencedMap extends AbstractMap {
                      int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
                      int animalsCount) {
         super(width, height, jungleRatio, startEnergy, moveEnergy, bushEnergy, grassEnergy, animalsCount);
-        statsMeter = new StatsMeter(STATISTICS_FILE_NAME);
+        statsMeter = new StatsMeter(this, STATISTICS_FILE_NAME);
     }
 
     @Override

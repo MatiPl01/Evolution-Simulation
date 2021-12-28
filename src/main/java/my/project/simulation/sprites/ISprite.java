@@ -15,6 +15,8 @@ public interface ISprite {
 
     Vector2D getPosition();
 
+    Vector2D getDisplayedPosition();
+
     IMap getMap();
 
     void add();

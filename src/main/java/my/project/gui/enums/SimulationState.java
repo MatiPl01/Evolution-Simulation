@@ -1,4 +1,4 @@
-package my.project.simulation.enums;
+package my.project.gui.enums;
 
 public enum SimulationState {
     RUNNING,

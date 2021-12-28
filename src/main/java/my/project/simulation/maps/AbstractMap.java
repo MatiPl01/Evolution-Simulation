@@ -1,6 +1,5 @@
 package my.project.simulation.maps;
 
-import my.project.gui.charts.ChartDrawer;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
@@ -17,6 +16,8 @@ public abstract class AbstractMap implements IMap, IObserver {
     private static final int MAGIC_STRATEGY_RESPAWN_THRESHOLD = 5;
     private static final int MAX_MAGIC_RESPAWNS_COUNT = 3;
 
+    private final int width;
+    private final int height;
     private final int moveEnergy;
     private final int startEnergy;
     private final int bushEnergy;
@@ -27,7 +28,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     protected final Vector2D jungleLowerleft;
     protected final Vector2D jungleUpperRight;
 
-    protected final Map<Vector2D, SortedSet<Animal>> mapAnimals = new HashMap<>();
+    public final Map<Vector2D, SortedSet<Animal>> mapAnimals = new HashMap<>();
     protected final Map<Vector2D, AbstractPlant> mapPlants = new HashMap<>();
     protected final Set<AbstractPlant> eatenPlants = new HashSet<>();
     protected final PrefixTree<Integer, Animal> genomesTree = new PrefixTree<>(Animal.getPossibleGenes());
@@ -52,6 +53,8 @@ public abstract class AbstractMap implements IMap, IObserver {
                 int startEnergy, int moveEnergy, int bushEnergy, int grassEnergy,
                 int animalsCount) {
         // Store initial values
+        this.width = width;
+        this.height = height;
         this.initialAnimalsCount = animalsCount;
         this.startEnergy = startEnergy;
         this.moveEnergy = moveEnergy;
@@ -131,6 +134,16 @@ public abstract class AbstractMap implements IMap, IObserver {
     }
 
     @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
+    }
+
+    @Override
     public void setGridBuilder(IBuilder gridBuilder) {
         this.gridBuilder = gridBuilder;
     }
@@ -182,16 +195,20 @@ public abstract class AbstractMap implements IMap, IObserver {
     public void setAnimalTracker(AnimalTracker tracker) { // TODO - add a possibility tu setup trackers
         if (animalTracker != null) animalTracker.remove();
         animalTracker = tracker;
-        tracker.setStatsMeter(statsMeter);
     }
 
     @Override
-    public void removeAnimalTracker() { // TODO - add a possibility to unlink tracker from an animal
+    public void removeAnimalTracker() {
         if (animalTracker != null) {
             animalTracker.remove();
             animalTracker = null;
         }
         else throw new NoSuchElementException("There is no AnimalTracker set up in a map");
+    }
+
+    @Override
+    public AnimalTracker getAnimalTracker() {
+        return animalTracker;
     }
 
     @Override
@@ -225,15 +242,24 @@ public abstract class AbstractMap implements IMap, IObserver {
     @Override
     public Set<Animal> getMaxEnergyFieldAnimals() {
         Set<Animal> animals = new HashSet<>();
-        for (SortedSet<Animal> currAnimals: mapAnimals.values()) {
-            animals.add(currAnimals.first());
+//        System.out.println("Map animals values: " + mapAnimals.values());
+        for (Vector2D position: mapAnimals.keySet()) {
+//            System.out.println("Animals at: " + position + " " + mapAnimals.get(position));
+//            System.out.println("First animal " + mapAnimals.get(position).first());
+            Animal animal = getMaxEnergyFieldAnimal(position);
+            if (animal != null) animals.add(animal);
         }
         return animals;
     }
 
     @Override
-    public void setChartDrawer(ChartDrawer chartDrawer) {
-        this.statsMeter.setChartDrawer(chartDrawer);
+    public Animal getMaxEnergyFieldAnimal(Vector2D position) {
+        return mapAnimals.get(position) != null ? mapAnimals.get(position).first() : null;
+    }
+
+    @Override
+    public Set<Animal> getAllFieldAnimals(Vector2D position) {
+        return mapAnimals.get(position) != null ? mapAnimals.get(position) : new TreeSet<>(new MaxEnergyComparator());
     }
 
     public List<Vector2D> getMapBoundingRect() {
@@ -575,7 +601,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         while (i < remainingEmptyFields && animalsIt.hasNext()) {
             Animal currAnimal = animalsIt.next();
             Vector2D position = Vector2D.randomVector(mapLowerLeft.getX(), mapUpperRight.getX(),
-                    mapLowerLeft.getY(), mapUpperRight.getY());
+                                                      mapLowerLeft.getY(), mapUpperRight.getY());
             position = getSegmentEmptyFieldVector(position, mapLowerLeft, mapUpperRight, true);
             (new Animal(this, position, startEnergy, currAnimal.getGenome())).add();
         }

@@ -1,5 +1,6 @@
 package my.project.gui.simulation.grid;
 
+import my.project.gui.controllers.AbstractContainerController;
 import my.project.gui.simulation.sprites.IGuiSprite;
 
 public interface IBuilder {
@@ -12,4 +13,6 @@ public interface IBuilder {
     void initialize();
 
     void render();
+
+    void setEventsController(AbstractContainerController controller);
 }

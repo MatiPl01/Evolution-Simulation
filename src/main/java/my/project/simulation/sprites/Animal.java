@@ -73,7 +73,7 @@ public class Animal extends AbstractSprite {
             case SOUTHWEST -> "SW";
             case WEST -> "W";
             case NORTHWEST -> "NW";
-        };
+        } + " " + ID + " " + getDisplayedPosition();
     }
 
     public Vector2D getPrevPosition() {
@@ -246,13 +246,14 @@ public class Animal extends AbstractSprite {
 
     private void handleTracking(Animal other, Animal child) {
         // Enable child tracking if one of parents is tracked
-        if (tracker != null || other.tracker != null) {
-            child.setTracker(tracker);
-            tracker.addToTrackedList(child);
+        AnimalTracker animalTracker = tracker != null ? tracker : other.tracker;
+        if (animalTracker != null) {
+            child.setTracker(animalTracker);
+            animalTracker.addToTrackedList(child);
             // Increment a number of children of the tracked animal if one
             // of created animal's parents is tracked
-            Animal trackedAnimal = tracker.getTrackedAnimal();
-            if (trackedAnimal == this || trackedAnimal == other) tracker.incrementChildrenCount();
+            Animal trackedAnimal = animalTracker.getTrackedAnimal();
+            if (trackedAnimal == this || trackedAnimal == other) animalTracker.incrementChildrenCount();
         }
     }
 }

@@ -2,7 +2,7 @@ package my.project.simulation.engine;
 
 import javafx.application.Platform;
 import my.project.gui.simulation.visualization.SimulationVisualizer;
-import my.project.simulation.enums.SimulationState;
+import my.project.gui.enums.SimulationState;
 import my.project.simulation.maps.IMap;
 
 import java.util.concurrent.ExecutionException;
@@ -49,24 +49,12 @@ public class SimulationEngine implements IEngine, Runnable {
         System.out.println("Initialized successfully? " + wasInitializationSuccessful);
         if (!wasInitializationSuccessful) return;
 
-        // TODO - remove code below
-        int i = 0;
-        // TODO - remove code above
-
         // Start rendering simulation frames
         while (true) {
             switch (simulationState) {
                 case RUNNING -> {
                     boolean wasFrameRendered = renderNewFrame();
                     if (!wasFrameRendered) return;
-//                     TODO - remove code below
-                    i++;
-                    if (i % 2000 == 0) {
-                        visualizer.showDominantGenomesAnimals();
-                        sleep(10000);
-                        visualizer.hideDominantGenomesAnimals();
-                    }
-//                     TODO - remove code above
                 }
                 case PAUSED -> sleep(SLEEP_TIME);
                 case FINISHED -> {

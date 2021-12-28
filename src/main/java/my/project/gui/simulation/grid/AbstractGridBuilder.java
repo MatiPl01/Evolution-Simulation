@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import my.project.gui.components.ZoomableScrollPane;
+import my.project.gui.controllers.AbstractContainerController;
 import my.project.gui.simulation.sprites.IGuiSprite;
 import my.project.simulation.maps.IMap;
 import my.project.simulation.sprites.AbstractPlant;
@@ -35,8 +36,10 @@ public abstract class AbstractGridBuilder implements IBuilder {
     protected final List<List<StackPane>> spritesGridHelper = new ArrayList<>();
     protected final GridPane wrapperGrid = new GridPane();
     protected final GridPane spritesGrid = new GridPane();
+    protected final GridPane linesGrid = new GridPane();
     protected final StackPane backgroundPane = new StackPane();
     protected final AnchorPane parentContainer;
+    protected AbstractContainerController controller;
 
     protected int gridWidth;
     protected int gridHeight;
@@ -68,8 +71,8 @@ public abstract class AbstractGridBuilder implements IBuilder {
     @Override
     public void initialize() {
         setupSpritesGrid();
+        setupLinesGrid();
         buildGrid();
-        displayGridLines(spritesGrid);
     }
 
     @Override
@@ -86,8 +89,17 @@ public abstract class AbstractGridBuilder implements IBuilder {
                 StackPane stackPane = new StackPane();
                 spritesGridHelper.get(x).add(stackPane);
                 spritesGrid.add(stackPane, x, mapHeight - y - 1, 1, 1);
+
+                // Add an event handler
+                Vector2D position = new Vector2D(x, y);
+                stackPane.setOnMouseClicked(event -> this.controller.notifyClick(position));
             }
         }
+    }
+
+    private void setupLinesGrid() {
+        setupGrid(linesGrid, mapWidth, mapHeight);
+        displayGridLines(linesGrid);
     }
 
     private void setupGrid(GridPane gridPane, int width, int height) {
@@ -134,7 +146,7 @@ public abstract class AbstractGridBuilder implements IBuilder {
     }
 
     @Override
-    public void addSprite(IGuiSprite guiSprite) throws IllegalArgumentException {
+    public void addSprite(IGuiSprite guiSprite) {
         Vector2D position = guiSprite.getPosition();
         spritesGridHelper.get(position.getX()).get(position.getY()).getChildren().add(guiSprite.getNode());
     }
@@ -143,6 +155,11 @@ public abstract class AbstractGridBuilder implements IBuilder {
     public void removeSprite(IGuiSprite guiSprite) {
         Vector2D position = guiSprite.getPosition();
         spritesGridHelper.get(position.getX()).get(position.getY()).getChildren().remove(guiSprite.getNode());
+    }
+
+    @Override
+    public void setEventsController(AbstractContainerController controller) {
+        this.controller = controller;
     }
 
     private void displayGridLines(GridPane gridPane) {

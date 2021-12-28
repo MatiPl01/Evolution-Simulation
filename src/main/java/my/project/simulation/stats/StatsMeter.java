@@ -1,12 +1,19 @@
 package my.project.simulation.stats;
 
 import javafx.application.Platform;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 import my.project.gui.charts.ChartDrawer;
+import my.project.simulation.maps.IMap;
+import my.project.simulation.sprites.Animal;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StatsMeter {
     private static final String DEFAULT_PATH = "./output/";
@@ -17,14 +24,18 @@ public class StatsMeter {
     private static final String AVERAGE_LIFESPAN_SERIES_NAME = "Average lifespan";
     private static final String AVERAGE_CHILDREN_SERIES_NAME = "Average number of children";
 
+    private final IMap map;
     private final String defaultFileName;
 
     private final List<StatsRecord> dailyStatistics = new ArrayList<>();
     private StatsRecord statsSum = new StatsRecord(0, 0, 0, 0, 0);
     private int dayNum = 0;
-    private ChartDrawer chartDrawer;
 
-    public StatsMeter(String defaultFileName) {
+    private ChartDrawer chartDrawer;
+    private VBox dominantGenomesBox;
+
+    public StatsMeter(IMap map, String defaultFileName) {
+        this.map = map;
         this.defaultFileName = defaultFileName;
     }
 
@@ -37,6 +48,10 @@ public class StatsMeter {
                                  AVERAGE_CHILDREN_SERIES_NAME);
     }
 
+    public void setDominantGenomesBox(VBox dominantGenomesBox) {
+        this.dominantGenomesBox = dominantGenomesBox;
+    }
+
     public void updateStatistics(long aliveAnimalsCount,
                                  long diedAnimalsCount,
                                  long plantsCount,
@@ -44,12 +59,16 @@ public class StatsMeter {
                                  double averageAliveEnergy,
                                  double averageDiedLifespan,
                                  double averageAliveChildren) {
+        // Update the chart
         chartDrawer.update(dayNum,
                            aliveAnimalsCount,
                            plantsCount,
                            averageAliveEnergy,
                            averageDiedLifespan,
                            averageAliveChildren);
+
+        // Update the dominant genomes box
+        this.updateDominantGenomes(dominantGenomes);
 
         // Save daily statistics
         StatsRecord record = new StatsRecord(aliveAnimalsCount,
@@ -65,16 +84,32 @@ public class StatsMeter {
         dayNum++;
     }
 
-    public void updateTrackedAnimalDeath(long dayNum) {
-        // TODO - send updates to GUI components (to implement)
+    private void updateDominantGenomes(Set<List<Integer>> dominantGenomes) {
+        dominantGenomesBox.getChildren().clear();
+        for (List<Integer> genome: dominantGenomes) {
+            VBox genomeBox = createGenomeBox(genome);
+            dominantGenomesBox.getChildren().add(genomeBox);
+        }
     }
 
-    public void updateTrackedAnimalDescendants(long descendantsCount) {
-        // TODO - send updates to GUI components (to implement)
+    private VBox createGenomeBox(List<Integer> genome) {
+        VBox vBox = new VBox();
+        Label genomeLabel = new Label(genomeToString(genome));
+        Separator separator = new Separator();
+        Label textLabel = new Label("Animals wih this genome");
+        FlowPane flowPane = new FlowPane();
+        flowPane.setVgap(10);
+        flowPane.setHgap(10);
+        vBox.getChildren().addAll(genomeLabel, separator, textLabel, flowPane);
+
+        for (Animal animal: map.getAnimalsWithGenome(genome)) {
+            flowPane.getChildren().add(new Label(String.valueOf(animal.getID())));
+        }
+        return vBox;
     }
 
-    public void updateTrackedAnimalChildren(int childrenCount) {
-        // TODO - send updates to GUI components (to implement)
+    private String genomeToString(List<Integer> genome) {
+        return genome.stream().map(Object::toString).collect(Collectors.joining(""));
     }
 
     private void writeLinesFromArray(BufferedWriter bw) throws IOException {
