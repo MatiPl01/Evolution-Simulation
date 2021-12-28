@@ -7,6 +7,8 @@ import my.project.gui.simulation.grid.FoldingMapGridBuilder;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.gui.simulation.sprites.GuiAnimalSprite;
 import my.project.gui.simulation.sprites.IGuiSprite;
+import my.project.simulation.engine.IEngine;
+import my.project.simulation.enums.SimulationState;
 import my.project.simulation.maps.FencedMap;
 import my.project.simulation.maps.FoldingMap;
 import my.project.simulation.maps.IMap;
@@ -20,7 +22,6 @@ import java.util.concurrent.FutureTask;
 public class SimulationVisualizer {
     private final IBuilder gridBuilder;
     private final IMap map;
-    private boolean isPaused = false;
     private boolean isShowingDominantGenomesAnimals = false;
 
     public SimulationVisualizer(IMap map, AnchorPane parentContainer) throws IllegalArgumentException {
@@ -32,65 +33,59 @@ public class SimulationVisualizer {
         } else throw new IllegalArgumentException("There is no GridBuilder defined for map: " + map.getClass());
     }
 
-    public void startVisualization() {
-        if (!isShowingDominantGenomesAnimals) isPaused = false;
-        else {
-            // TODO - display some message saying that there is no possibility to start animation when dominant genotypes animals are displayed
-            System.out.println("Cannot start visualization as dominant genomes are shown");
-        }
-    }
-
-    public void pauseVisualization() {
-        isPaused = true;
-    }
-
-    public boolean isPaused() {
-        return isPaused;
-    }
+//    public void startVisualization() {
+//        if (!isShowingDominantGenomesAnimals) isPaused = false;
+//        else {
+//            // TODO - display some message saying that there is no possibility to start animation when dominant genotypes animals are displayed
+//            System.out.println("Cannot start visualization as dominant genomes are shown");
+//        }
+//    }
+//
+//    public void pauseVisualization() {
+//        isPaused = true;
+//    }
+//
+//    public boolean isPaused() {
+//        return isPaused;
+//    }
 
     public void drawGrid() {
         gridBuilder.initialize();
         gridBuilder.render();
     }
 
-    public void showNewFrame() {
-        // TODO - add live data updates (charts, etc.)
-        // (Don't implement any map sprites updates because they
-        // will be updated automatically by their observers)
-    }
-
     public void showDominantGenomesAnimals() {
-        if (!isPaused) {
-            // TODO - disable using this method in a gui when a simulation is not paused
-            System.out.println("Cannot show animals with dominant genomes while simulation is running");
-        } else {
-            isShowingDominantGenomesAnimals = true;
-            // Bring to top animals which have dominant genomes
-            FutureTask<Void> future = new FutureTask<>(() -> {
-                Set<Animal> animals = map.getDominantGenomesAnimals();
-                bringAnimalsToTop(animals);
-                setFocusOnAnimals(animals);
-                showAnimalsIDs(animals);
+//        if (simulationEngine.getState() == SimulationState.RUNNING) {
+//            // TODO - disable using this method in a gui when a simulation is not paused
+//            System.out.println("Cannot show animals with dominant genomes while simulation is running");
+//        } else {
+        isShowingDominantGenomesAnimals = true;
+        // Bring to top animals which have dominant genomes
+        FutureTask<Void> future = new FutureTask<>(() -> {
+            Set<Animal> animals = map.getDominantGenomesAnimals();
+            bringAnimalsToTop(animals);
+            setFocusOnAnimals(animals);
+            showAnimalsIDs(animals);
 
-                System.out.println("==== Dominant genomes ====");
+            System.out.println("==== Dominant genomes ====");
 
-                for (List<Integer> genome: map.getDominantGenomes()) {
-                    // TODO - display genomes with animals IDs in GUI (instead of this code below)
-                    System.out.println("Genome: " + genome);
-                    for (Animal animal: map.getAnimalsWithGenome(genome)) {
-                        System.out.println(" > " + animal.getID() + " at position: " + animal.getPosition());
-                    }
+            for (List<Integer> genome: map.getDominantGenomes()) {
+                // TODO - display genomes with animals IDs in GUI (instead of this code below)
+                System.out.println("Genome: " + genome);
+                for (Animal animal: map.getAnimalsWithGenome(genome)) {
+                    System.out.println(" > " + animal.getID() + " at position: " + animal.getPosition());
                 }
-            }, null);
-
-            Platform.runLater(future);
-
-            try {
-                future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
             }
+        }, null);
+
+        Platform.runLater(future);
+
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
+//        }
     }
 
     public void hideDominantGenomesAnimals() {

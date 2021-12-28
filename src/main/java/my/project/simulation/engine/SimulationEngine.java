@@ -1,7 +1,6 @@
 package my.project.simulation.engine;
 
 import javafx.application.Platform;
-import javafx.scene.layout.AnchorPane;
 import my.project.gui.simulation.visualization.SimulationVisualizer;
 import my.project.simulation.enums.SimulationState;
 import my.project.simulation.maps.IMap;
@@ -13,14 +12,34 @@ import java.util.concurrent.TimeUnit;
 public class SimulationEngine implements IEngine, Runnable {
     private final SimulationVisualizer visualizer;
     private final IMap map;
-    private SimulationState simulationState = SimulationState.RUNNING;
+    private SimulationState simulationState = SimulationState.PAUSED;
 
     private final static int SLEEP_TIME = 100; // When simulation is paused
-    private final static int refreshTime = 1; // TODO - make me adjustable in GUI
+    private int refreshInterval = 300;
 
-    public SimulationEngine(IMap map, AnchorPane parentContainer) {
-        this.visualizer = new SimulationVisualizer(map, parentContainer);
+    public SimulationEngine(IMap map, SimulationVisualizer visualizer) {
+        this.visualizer = visualizer;
         this.map = map;
+    }
+
+    @Override
+    public void start() {
+        this.simulationState = SimulationState.RUNNING;
+    }
+
+    @Override
+    public void pause() {
+        this.simulationState = SimulationState.PAUSED;
+    }
+
+    @Override
+    public SimulationState getState() {
+        return this.simulationState;
+    }
+
+    @Override
+    public void setRefreshInterval(int refreshInterval) {
+        this.refreshInterval = refreshInterval;
     }
 
     @Override
@@ -42,12 +61,10 @@ public class SimulationEngine implements IEngine, Runnable {
                     if (!wasFrameRendered) return;
 //                     TODO - remove code below
                     i++;
-                    if (i % 5000 == 0) {
-                        visualizer.pauseVisualization();
+                    if (i % 2000 == 0) {
                         visualizer.showDominantGenomesAnimals();
-                        sleep(5000);
+                        sleep(10000);
                         visualizer.hideDominantGenomesAnimals();
-                        visualizer.startVisualization();
                     }
 //                     TODO - remove code above
                 }
@@ -56,7 +73,6 @@ public class SimulationEngine implements IEngine, Runnable {
                     return;
                 }
             }
-            sleep(refreshTime);
         }
 
         // TODO - move statistics saving to another place (only if user decides to generate a file with statistics)
@@ -99,7 +115,7 @@ public class SimulationEngine implements IEngine, Runnable {
         }
         long endTime = System.currentTimeMillis();
         // Add some delay is tasks were finished to early
-        sleep(Math.max(0, refreshTime - (int)(endTime - startTime)));
+        sleep(Math.max(0, refreshInterval - (int)(endTime - startTime)));
         return true;
     }
 

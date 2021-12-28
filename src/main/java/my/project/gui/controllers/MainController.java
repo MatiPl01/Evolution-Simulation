@@ -24,6 +24,7 @@ public class MainController {
         IMap fencedMap = new FencedMap(10, 10, .5, 100,
                 5, 50, 50, 50);
 
+        System.out.println("IN LAUNCH");
         containerLeftController.launch(foldingMap);
         containerRightController.launch(fencedMap);
     }

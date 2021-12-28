@@ -1,16 +1,193 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<SplitPane dividerPositions="0.65" orientation="VERTICAL" prefHeight="700.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="my.project.gui.controllers.ContainerLeftController">
+<SplitPane dividerPositions="0.65" orientation="VERTICAL" prefHeight="700.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="my.project.gui.controllers.ContainerLeftController">
   <items>
     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
          <children>
-            <SplitPane dividerPositions="0.3" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <SplitPane dividerPositions="0.36" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
               <items>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
-                <AnchorPane fx:id="simulationBox" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
+                <AnchorPane minHeight="0.0" minWidth="0.0" SplitPane.resizableWithParent="false">
+                     <children>
+                        <ScrollPane minHeight="-Infinity" minWidth="170.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.8000000000000114" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <content>
+                            <AnchorPane minHeight="0.0">
+                                 <children>
+                                    <VBox alignment="TOP_CENTER" prefWidth="240.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                          <Label text="Folding map">
+                                             <VBox.margin>
+                                                <Insets bottom="10.0" />
+                                             </VBox.margin>
+                                          </Label>
+                                          <Separator />
+                                          <TitledPane text="Settings">
+                                            <content>
+                                              <AnchorPane minHeight="0.0" minWidth="0.0">
+                                                   <children>
+                                                      <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                         <children>
+                                                            <VBox>
+                                                               <children>
+                                                                  <Label text="Refresh interval">
+                                                                     <padding>
+                                                                        <Insets bottom="10.0" top="5.0" />
+                                                                     </padding>
+                                                                  </Label>
+                                                                  <HBox>
+                                                                     <children>
+                                                                        <Slider fx:id="refreshSlider" prefHeight="25.0" prefWidth="95.0" showTickMarks="true">
+                                                                           <HBox.margin>
+                                                                              <Insets right="5.0" />
+                                                                           </HBox.margin></Slider>
+                                                                        <Label fx:id="refreshLabel" prefWidth="30.0" text="9999" />
+                                                                        <Label prefWidth="20.0" text="ms" />
+                                                                     </children>
+                                                                  </HBox>
+                                                               </children>
+                                                            </VBox>
+                                                            <VBox>
+                                                               <children>
+                                                                  <Label text="Start/Pause simulation">
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="10.0" />
+                                                                     </VBox.margin>
+                                                                  </Label>
+                                                                  <Button fx:id="pauseButton" mnemonicParsing="false" onAction="#onPause" prefHeight="25.0" prefWidth="96.0" text="Start" />
+                                                               </children>
+                                                               <VBox.margin>
+                                                                  <Insets top="15.0" />
+                                                               </VBox.margin>
+                                                            </VBox>
+                                                         </children>
+                                                      </VBox>
+                                                   </children>
+                                                   <padding>
+                                                      <Insets bottom="10.0" left="10.0" right="20.0" top="10.0" />
+                                                   </padding>
+                                                </AnchorPane>
+                                            </content>
+                                          </TitledPane>
+                                          <TitledPane expanded="false" text="Initial settings">
+                                            <content>
+                                              <AnchorPane minHeight="0.0" minWidth="0.0">
+                                                   <children>
+                                                      <VBox spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                         <children>
+                                                            <HBox>
+                                                               <children>
+                                                                  <Label text="width" />
+                                                                  <Region HBox.hgrow="ALWAYS" />
+                                                                  <Label text="10" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox layoutX="10.0" layoutY="10.0">
+                                                               <children>
+                                                                  <Label text="height" />
+                                                                  <Region HBox.hgrow="ALWAYS" />
+                                                                  <Label text="10" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox layoutX="10.0" layoutY="27.0">
+                                                               <children>
+                                                                  <Label text="startEnergy" />
+                                                                  <Region HBox.hgrow="ALWAYS" />
+                                                                  <Label text="100" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox layoutX="10.0" layoutY="44.0">
+                                                               <children>
+                                                                  <Label text="moveEnergy" />
+                                                                  <Region HBox.hgrow="ALWAYS" />
+                                                                  <Label text="5" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox layoutX="10.0" layoutY="61.0">
+                                                               <children>
+                                                                  <Label text="plantEnergy" />
+                                                                  <Region HBox.hgrow="ALWAYS" />
+                                                                  <Label text="50" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox layoutX="10.0" layoutY="78.0">
+                                                               <children>
+                                                                  <Label text="jungleRatio" />
+                                                                  <Region HBox.hgrow="ALWAYS" />
+                                                                  <Label text=".5" />
+                                                               </children>
+                                                            </HBox>
+                                                         </children>
+                                                      </VBox>
+                                                   </children>
+                                                   <padding>
+                                                      <Insets bottom="10.0" left="10.0" right="20.0" top="10.0" />
+                                                   </padding>
+                                                </AnchorPane>
+                                            </content>
+                                          </TitledPane>
+                                          <TitledPane animated="false" text="Dominant genotypes">
+                                            <content>
+                                              <AnchorPane minHeight="0.0" minWidth="0.0">
+                                                   <children>
+                                                      <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="6.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                         <children>
+                                                            <VBox>
+                                                               <children>
+                                                                  <Label text="00000000000000000000000000000000">
+                                                                     <VBox.margin>
+                                                                        <Insets bottom="5.0" />
+                                                                     </VBox.margin>
+                                                                  </Label>
+                                                                  <Separator />
+                                                                  <Label text="Animals having this genotype">
+                                                                     <VBox.margin>
+                                                                        <Insets />
+                                                                     </VBox.margin>
+                                                                     <padding>
+                                                                        <Insets bottom="2.5" top="2.5" />
+                                                                     </padding>
+                                                                  </Label>
+                                                                  <FlowPane hgap="10.0" vgap="10.0">
+                                                                     <children>
+                                                                        <Label text="201" />
+                                                                        <Label text="6004" />
+                                                                     </children>
+                                                                  </FlowPane>
+                                                               </children>
+                                                            </VBox>
+                                                         </children>
+                                                      </VBox>
+                                                   </children>
+                                                   <padding>
+                                                      <Insets bottom="10.0" left="10.0" right="20.0" top="10.0" />
+                                                   </padding>
+                                                </AnchorPane>
+                                            </content>
+                                          </TitledPane>
+                                       </children>
+                                       <padding>
+                                          <Insets bottom="10.0" top="10.0" />
+                                       </padding>
+                                    </VBox>
+                                 </children>
+                              </AnchorPane>
+                          </content>
+                        </ScrollPane>
+                     </children></AnchorPane>
+                  <AnchorPane fx:id="simulationBox" prefHeight="200.0" prefWidth="200.0" />
               </items>
             </SplitPane>
          </children></AnchorPane>
