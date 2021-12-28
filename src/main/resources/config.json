@@ -1,0 +1,107 @@
+{
+  "foldingMap": {
+    "width": {
+      "def": 15,
+      "min": 1,
+      "max": 100
+    },
+    "height": {
+      "def": 12,
+      "min": 1,
+      "max": 100
+    },
+    "jungleRatio": {
+      "def": 0.3,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "startEnergy": {
+      "def": 200,
+      "min": 1,
+      "max": 999999999
+    },
+    "moveEnergy": {
+      "def": 3,
+      "min": 1,
+      "max": 999999999
+    },
+    "bushEnergy": {
+      "def": 60,
+      "min": 1,
+      "max": 999999
+    },
+    "grassEnergy": {
+      "def": 40,
+      "min": 1,
+      "max": 999999
+    },
+    "animalsCount": {
+      "def": 40,
+      "min": 1,
+      "max": 200
+    },
+    "magicRespawnsCount": {
+      "def": 3,
+      "min": 0,
+      "max": 999999
+    },
+    "magicRespawnAnimals": {
+      "def": 5,
+      "min": 0,
+      "max": 100
+    }
+  },
+
+  "fencedMap": {
+    "width": {
+      "def": 10,
+      "min": 1,
+      "max": 100
+    },
+    "height": {
+      "def": 10,
+      "min": 1,
+      "max": 100
+    },
+    "jungleRatio": {
+      "def": 0.3,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "startEnergy": {
+      "def": 200,
+      "min": 1,
+      "max": 999999999
+    },
+    "moveEnergy": {
+      "def": 3,
+      "min": 1,
+      "max": 999999999
+    },
+    "bushEnergy": {
+      "def": 60,
+      "min": 1,
+      "max": 999999
+    },
+    "grassEnergy": {
+      "def": 40,
+      "min": 1,
+      "max": 999999
+    },
+    "animalsCount": {
+      "def": 40,
+      "min": 1,
+      "max": 200
+    },
+    "magicRespawnsCount": {
+      "def": 3,
+      "min": 0,
+      "max": 999999
+    },
+    "magicRespawnAnimals": {
+      "def": 5,
+      "min": 0,
+      "max": 100
+    }
+  }
+}

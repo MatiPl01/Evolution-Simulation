@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="my.project.gui.controllers.InputFormController">
+   <children>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Map width" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="widthInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Map height" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="heightInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Jungle size to map size ratio" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="ratioInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Animal initial energy" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="initialEnergyInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Animal move energy" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="moveEnergyInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Jungle plant (bush) energy" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="bushEnergyInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Steppe plant (grass) energy" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="grassEnergyInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Initial number of animals" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="initialAnimalsInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Strategy" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <ComboBox fx:id="strategyCombobox" onAction="#onStrategyChange" prefWidth="150.0" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Number of magic respawns" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="magicRespawnsInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" spacing="20.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefWidth="250.0">
+               <children>
+                  <Label text="Number of animals for magic respawn" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefWidth="250.0">
+               <children>
+                  <TextField fx:id="magicAnimalsInput" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+         <children>
+            <CheckBox fx:id="dontShowCheckbox" mnemonicParsing="false" onAction="#onDontShowChecked" text="Don't show this map">
+               <HBox.margin>
+                  <Insets top="10.0" />
+               </HBox.margin>
+            </CheckBox>
+         </children>
+      </HBox>
+   </children>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+</VBox>

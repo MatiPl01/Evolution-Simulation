@@ -53,7 +53,6 @@ public class StatsMeter {
     }
 
     public void updateStatistics(long aliveAnimalsCount,
-                                 long diedAnimalsCount,
                                  long plantsCount,
                                  Set<List<Integer>> dominantGenomes,
                                  double averageAliveEnergy,

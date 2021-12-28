@@ -582,7 +582,6 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     private void updateStatistics() {
         statsMeter.updateStatistics(getAnimalsAliveCount(),
-                diedAnimalsCount,
                 plantsCount,
                 getDominantGenomes(),
                 calcAverageAliveEnergy(),
