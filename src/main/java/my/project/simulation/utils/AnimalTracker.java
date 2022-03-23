@@ -1,9 +1,7 @@
 package my.project.simulation.utils;
 
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import my.project.simulation.sprites.Animal;
-import my.project.simulation.stats.StatsMeter;
 
 import java.util.ArrayList;
 import java.util.List;

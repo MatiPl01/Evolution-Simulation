@@ -17,73 +17,14 @@ public class ContainerLeftController extends AbstractContainerController {
     protected AnchorPane chartBox;
 
     @FXML
-    private VBox dominantGenomesBox;
-
-    @FXML
-    private Slider refreshSlider;
-
-    @FXML
-    private Button pauseButton;
-
-    @FXML
-    private Label refreshLabel;
-
-    @FXML
-    private Button dominantGenomesButton;
-
-    @FXML
-    private Button trackButton;
-
-    @FXML
-    private VBox trackedAnimalBox;
-
-    @FXML
-    private Label trackedAnimalID;
-
-    @FXML
-    private Label trackedAnimalChildren;
-
-    @FXML
-    private Label trackedAnimalDescendants;
-
-    @FXML
-    private Label trackedAnimalDeath;
+    protected MenuController menuBoxController;
 
     @FXML
     private void initialize() {
         this.legendSide = Side.LEFT;
-        setSimulationBox(simulationBox);
         setChartBox(chartBox);
-        setPauseButton(pauseButton);
-        setRefreshSlider(refreshSlider);
-        setRefreshLabel(refreshLabel);
-        setDominantGenomesBox(dominantGenomesBox);
-        setDominantGenomesButton(dominantGenomesButton);
-        setTrackButton(trackButton);
-        setTrackedAnimalBoxes(trackedAnimalBox,
-                              trackedAnimalID,
-                              trackedAnimalChildren,
-                              trackedAnimalDescendants,
-                              trackedAnimalDeath);
-    }
-
-    @FXML
-    private void onPause() {
-        pauseButtonClicked();
-    }
-
-    @FXML
-    private void onDominantShow() {
-        dominantButtonClicked();
-    }
-
-    @FXML
-    private void onTrackChoose() {
-        trackButtonClicked();
-    }
-
-    @FXML
-    private void onStatsFileSave() {
-        saveStatsFile();
+        setSimulationBox(simulationBox);
+        setMenuBoxController(menuBoxController);
+        menuBoxController.setContainerController(this);
     }
 }

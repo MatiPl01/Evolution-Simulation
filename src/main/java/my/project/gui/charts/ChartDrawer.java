@@ -1,6 +1,5 @@
 package my.project.gui.charts;
 
-import javafx.collections.ObservableList;
 import javafx.geometry.Side;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChartDrawer {
-    private static int MAX_POINTS = 200;
+    private static final int MAX_POINTS = 200;
     private final LineChart<Number, Number> lineChart;
     private final List<XYChart.Series<Number, Number>> seriesList = new ArrayList<>();
 

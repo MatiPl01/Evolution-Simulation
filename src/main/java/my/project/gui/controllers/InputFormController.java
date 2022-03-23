@@ -25,7 +25,6 @@ public class InputFormController {
 
     private InputBoxController parentController;
     private MapConfig mapConfig;
-    private MapType mapType;
     private final List<TextField> textFields = new ArrayList<>();
 
     @FXML
@@ -94,7 +93,6 @@ public class InputFormController {
     }
 
     public void setData(MapType mapType, InputBoxController parentController, MapConfig mapConfig) {
-        this.mapType = mapType;
         this.parentController = parentController;
         this.mapConfig = mapConfig;
         parentController.setCheckBox(mapType, dontShowCheckbox);

@@ -19,6 +19,7 @@ public abstract class AbstractMap implements IMap, IObserver {
     private static final int INFO_DISPLAY_TIME = 5000; // ms
     private static final String DEFAULT_INFO_MESSAGE = "";
 
+    private final MapSettings settings;
     private final int magicStrategyRespawnThreshold;
     private final int maxMagicRespawnsCount;
     private final String mapName;
@@ -58,6 +59,7 @@ public abstract class AbstractMap implements IMap, IObserver {
 
     AbstractMap(String mapName, MapSettings mapSettings) {
         // Store initial values
+        this.settings = mapSettings;
         this.mapName = mapName;
         this.width = mapSettings.width();
         this.height = mapSettings.height();
@@ -268,6 +270,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         statsMeter.setInfoLogger(infoLogger);
     }
 
+    @Override
     public List<Vector2D> getMapBoundingRect() {
         return new ArrayList<>() {{
             add(mapLowerLeft);
@@ -277,22 +280,31 @@ public abstract class AbstractMap implements IMap, IObserver {
         }};
     }
 
+    @Override
     public int getMoveEnergy() {
         return moveEnergy;
     }
 
+    @Override
     public int getStartEnergy() {
         return startEnergy;
     }
 
+    @Override
     public int getMinBreedEnergy() {
         return (int)(startEnergy * MIN_BREED_ENERGY_RATIO + .5);
     }
 
+    @Override
     public void initialize() {
         randomlyPlaceAnimals(initialAnimalsCount);
         spawnPlants();
         updateStatistics();
+    }
+
+    @Override
+    public MapSettings getSettings() {
+        return settings;
     }
 
     private void randomlyPlaceAnimals(int animalsCount) {
@@ -614,6 +626,7 @@ public abstract class AbstractMap implements IMap, IObserver {
             Vector2D position = Vector2D.randomVector(mapLowerLeft.getX(), mapUpperRight.getX(),
                                                       mapLowerLeft.getY(), mapUpperRight.getY());
             position = getSegmentEmptyFieldVector(position, mapLowerLeft, mapUpperRight, true);
+            if (position == null) return;
             (new Animal(this, position, startEnergy, currAnimal.getGenome())).add();
         }
     }

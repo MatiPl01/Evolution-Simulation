@@ -12,8 +12,6 @@ import my.project.gui.components.ZoomableScrollPane;
 import my.project.gui.controllers.AbstractContainerController;
 import my.project.gui.simulation.sprites.IGuiSprite;
 import my.project.simulation.maps.IMap;
-import my.project.simulation.sprites.AbstractPlant;
-import my.project.simulation.sprites.Animal;
 import my.project.simulation.utils.Vector2D;
 
 import java.util.ArrayList;

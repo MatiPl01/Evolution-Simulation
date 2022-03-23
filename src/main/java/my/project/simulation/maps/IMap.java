@@ -1,9 +1,9 @@
 package my.project.simulation.maps;
 
 import javafx.scene.control.Label;
+import my.project.gui.config.MapSettings;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.simulation.enums.MapArea;
-import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.sprites.Animal;
 import my.project.simulation.stats.StatsMeter;
 import my.project.simulation.utils.AnimalTracker;
@@ -68,4 +68,6 @@ public interface IMap {
     Set<Animal> getDominantGenomesAnimals();
 
     void setInfoBox(Label infoBox);
+
+    MapSettings getSettings();
 }

@@ -6,7 +6,6 @@ import my.project.gui.simulation.grid.FencedMapGridBuilder;
 import my.project.gui.simulation.grid.FoldingMapGridBuilder;
 import my.project.gui.simulation.grid.IBuilder;
 import my.project.gui.simulation.sprites.GuiAnimalSprite;
-import my.project.gui.simulation.sprites.IGuiSprite;
 import my.project.simulation.maps.FencedMap;
 import my.project.simulation.maps.FoldingMap;
 import my.project.simulation.maps.IMap;

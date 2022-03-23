@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import my.project.gui.config.Config;
 import my.project.gui.config.ConfigLoader;
@@ -22,21 +21,11 @@ public class InputBoxController {
     private static final String CONFIG_JSON_PATH = "./src/main/resources/config.json";
     private static final String MAIN_SCENE_PATH = "/fxml/MainBox.fxml";
 
-    private static final int FOLDING_MAP_TAB_INDEX = 0;
-    private static final int FENCED_MAP_TAB_INDEX = 1;
-    private static Config config;
-
     private CheckBox foldingMapCheckbox;
     private CheckBox fencedMapCheckbox;
 
     @FXML
     private TabPane formTabPane;
-
-    @FXML
-    private VBox foldingInputForm;
-
-    @FXML
-    private VBox fencedInputForm;
 
     @FXML
     private InputFormController foldingInputFormController;
@@ -49,14 +38,16 @@ public class InputBoxController {
         Map<MapType, MapSettings> settings = new HashMap<>();
         if (!foldingMapCheckbox.isSelected()) {
             if (!foldingInputFormController.checkIfValid()) {
-                DialogUtils.informationDialog("Invalid settings", "Invalid in Folding map" , "Found empty text fields");
+                DialogUtils.informationDialog("Invalid settings",
+                        "Invalid settings in Folding map form" , "Found empty text fields");
                 return;
             }
             settings.put(MapType.FOLDING, foldingInputFormController.generateMapSettings());
         }
         if (!fencedMapCheckbox.isSelected()) {
             if (!fencedInputFormController.checkIfValid()) {
-                DialogUtils.informationDialog("Invalid settings", "Invalid in Fenced map" , "Found empty text fields");
+                DialogUtils.informationDialog("Invalid settings",
+                        "Invalid settings in Fenced map form" , "Found empty text fields");
                 return;
             }
             settings.put(MapType.FENCED, fencedInputFormController.generateMapSettings());
@@ -164,7 +155,11 @@ public class InputBoxController {
                 invalidSet.add(mapType);
             }
             if (s.animalsCount() <= s.magicRespawnAnimals()) {
-                stringBuilder.append("Number of animals for a magic respawn should be greater than an initial number of animals.\n");
+                stringBuilder.append("Number of animals for a magic respawn should be lower than an initial number of animals.\n");
+                invalidSet.add(mapType);
+            }
+            if (s.magicRespawnAnimals() > fieldsCount / 2) {
+                stringBuilder.append("Number of animals for a magic respawn should be lower than half the number of fields.\n");
                 invalidSet.add(mapType);
             }
             if (!invalidSet.contains(mapType)) {

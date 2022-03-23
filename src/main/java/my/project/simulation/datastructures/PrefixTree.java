@@ -1,9 +1,6 @@
 package my.project.simulation.datastructures;
 
-import my.project.simulation.sprites.Animal;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 class TreeNode<K, V> {
     private final Set<V> values = new HashSet<>();

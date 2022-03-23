@@ -1,7 +1,6 @@
 package my.project.simulation.maps;
 
 import my.project.gui.config.MapSettings;
-import my.project.simulation.enums.MapStrategy;
 import my.project.simulation.stats.StatsMeter;
 import my.project.simulation.utils.Vector2D;
 
