@@ -252,7 +252,7 @@
                 </AnchorPane>
             </content>
         </TitledPane>
-        <TitledPane animated="false" expanded="false" text="Animals a on clicked field" textFill="WHITE">
+        <TitledPane animated="false" expanded="false" text="Animals on a clicked field" textFill="WHITE">
             <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0">
                     <children>
@@ -260,7 +260,7 @@
                             <children>
                         <HBox>
                            <children>
-                              <Label text="Clicked at field (x, y) = " />
+                              <Label text="Clicked field (x, y) = " />
                               <Label fx:id="clickedFieldPositionLabel" text="(-, -)" />
                            </children>
                         </HBox>

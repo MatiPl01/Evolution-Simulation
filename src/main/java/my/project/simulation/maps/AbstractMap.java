@@ -97,7 +97,7 @@ public abstract class AbstractMap implements IMap, IObserver {
         } else {
             // Remove an animal from the previous position on a map
             removeAnimal(animal, animal.getPrevPosition(), true);
-            // Add an animal at a new position on the map
+            // Add an animal on a new position on the map
             placeAnimal(animal);
         }
     }
